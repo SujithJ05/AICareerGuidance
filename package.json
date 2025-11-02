@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--inspect next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "echo \"NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is: $NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY\" && next build --turbopack",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate"
