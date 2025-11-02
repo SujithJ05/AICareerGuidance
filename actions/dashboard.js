@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
+  model: "gemini-1.5-flash",
 });
 
 export const generateAIInsights = async (industry) => {
@@ -27,12 +27,12 @@ export const generateAIInsights = async (industry) => {
           Include at least 5 common roles for salary ranges.
           Growth rate should be a percentage.
           Include at least 5 skills and trends.
-        `;;
+        `;
 
   const result = await model.generateContent(prompt);
   const response = result.response;
-  const text=response.text()
-  const cleanedText= text.replace(/```(?:json)?\n?/g, "").trim();
+  const text = response.text();
+  const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
   return JSON.parse(cleanedText);
 };
@@ -45,15 +45,14 @@ export async function getIndustryInsights() {
 
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
-    include:{industryInsight:true}
+    include: { industryInsight: true },
   });
   if (!user) throw new Error("user not found");
-  
+
   if (!user.industry) {
     // User hasn't selected an industry yet
     return null; // Or redirect to onboarding
   }
-
 
   if (!user.industryInsight) {
     const insights = await generateAIInsights(user.industry);
