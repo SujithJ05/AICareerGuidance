@@ -48,6 +48,7 @@ model User {
   assessments Assessment[]
   resumes     Resume[]
   coverLetter CoverLetter[]
+  courses     Course[]
 
 }
 
@@ -115,5 +116,24 @@ model IndustryInsight {
   nextUpdate       DateTime
 
   @@index([industry])
+}
+
+model Course {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  title           String
+  description     String
+  category        String
+  difficulty      String
+  duration        String
+  chapters        Int
+  roadmap         String   // markdown content
+  progress        Json     @default("[]") // chapter-level booleans
+  sectionProgress Json     @default("[]") // 2D booleans for sections
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
 }
 

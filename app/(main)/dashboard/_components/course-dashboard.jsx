@@ -6,17 +6,34 @@ import { Plus, Book, Clock, Award, Trash2, ExternalLink } from "lucide-react";
 export default function CourseDashboard() {
   const router = useRouter();
   const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchCourses = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/courses");
+      if (!res.ok) throw new Error("Failed to load courses");
+      const data = await res.json();
+      setCourses(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Load courses from localStorage
-    const savedCourses = JSON.parse(localStorage.getItem("courses") || "[]");
-    setCourses(savedCourses);
+    fetchCourses();
   }, []);
 
-  const handleDelete = (id) => {
-    const updated = courses.filter((c) => c.id !== id);
-    setCourses(updated);
-    localStorage.setItem("courses", JSON.stringify(updated));
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(`/api/courses/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete course");
+      setCourses((prev) => prev.filter((c) => c.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -34,7 +51,9 @@ export default function CourseDashboard() {
         </button>
       </div>
 
-      {courses.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-10 text-gray-500">Loading...</div>
+      ) : courses.length === 0 ? (
         <div className="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
           <Book className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-600 mb-2">

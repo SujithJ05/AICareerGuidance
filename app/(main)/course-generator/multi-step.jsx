@@ -115,7 +115,6 @@ export default function MultiStepCourseGenerator() {
     desc: "",
     difficulty: "",
     duration: "",
-    addVideo: "",
     chapters: "",
   });
 
@@ -230,22 +229,6 @@ export default function MultiStepCourseGenerator() {
           />
         </div>
         <div>
-          <label className="block font-medium mb-2">Add Video</label>
-          <select
-            className="w-full border p-2 rounded"
-            value={form.addVideo}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, addVideo: e.target.value }))
-            }
-          >
-            <option value="" disabled>
-              Select option
-            </option>
-            <option>Yes</option>
-            <option>No</option>
-          </select>
-        </div>
-        <div>
           <label className="block font-medium mb-2">No of Chapters</label>
           <input
             className="w-full border p-2 rounded"
@@ -268,12 +251,7 @@ export default function MultiStepCourseGenerator() {
         </button>
         <button
           className="px-6 py-2 rounded bg-purple-600 text-white"
-          disabled={
-            !form.difficulty ||
-            !form.duration ||
-            !form.addVideo ||
-            !form.chapters
-          }
+          disabled={!form.difficulty || !form.duration || !form.chapters}
           onClick={() => setStep(2)}
         >
           Next
@@ -296,27 +274,38 @@ export default function MultiStepCourseGenerator() {
       if (!res.ok) throw new Error("Failed to generate course layout");
       const data = await res.json();
 
-      // Save course to localStorage
-      const courseId = Date.now().toString();
-      const newCourse = {
-        id: courseId,
-        title: data.courseInfo.title,
-        description: data.courseInfo.description,
-        category: data.courseInfo.category,
-        difficulty: data.courseInfo.difficulty,
-        duration: data.courseInfo.duration,
-        chapters: data.courseInfo.chapters,
-        roadmap: data.roadmap,
-        progress: Array(Math.max(1, data.courseInfo.chapters || 0)).fill(false),
-        createdAt: new Date().toISOString(),
-      };
-
-      const courses = JSON.parse(localStorage.getItem("courses") || "[]");
-      courses.push(newCourse);
-      localStorage.setItem("courses", JSON.stringify(courses));
+      // Save course via API (with fallbacks and numeric chapters)
+      const courseInfo = data.courseInfo || {};
+      const chaptersCount =
+        parseInt(courseInfo.chapters || form.chapters || 0, 10) || 0;
+      const resCreate = await fetch("/api/courses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: courseInfo.title || form.topic || "Untitled Course",
+          description: courseInfo.description || form.desc || "",
+          category: courseInfo.category || form.category || "General",
+          difficulty: courseInfo.difficulty || form.difficulty || "Beginner",
+          duration: courseInfo.duration || form.duration || "",
+          chapters: chaptersCount,
+          roadmap: data.roadmap || "",
+          progress: Array(Math.max(1, chaptersCount || 0)).fill(false),
+          sectionProgress: [],
+        }),
+      });
+      if (!resCreate.ok) {
+        const errBody = await resCreate.json().catch(() => ({}));
+        if (resCreate.status === 401) {
+          throw new Error("Please sign in to create courses.");
+        }
+        throw new Error(
+          errBody?.error || errBody?.message || "Failed to save course"
+        );
+      }
+      const created = await resCreate.json();
 
       // Navigate to course view page
-      router.push(`/course-generator/${courseId}`);
+      router.push(`/course-generator/${created.id}`);
     } catch (err) {
       setError(err.message || "Unknown error");
     } finally {

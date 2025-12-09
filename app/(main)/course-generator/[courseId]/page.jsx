@@ -116,32 +116,36 @@ export default function CourseViewPage({ params }) {
   }, [sectionAnchor]);
 
   useEffect(() => {
-    // Load course from localStorage
-    const courses = JSON.parse(localStorage.getItem("courses") || "[]");
-    const course = courses.find((c) => c.id === params.courseId);
-    if (course) {
-      setCourseData(course);
-      // ensure progress array exists and matches chapters length
-      const chaptersArr = splitMarkdownByChapters(course.roadmap);
-      const len = chaptersArr.length;
-      const secProg = Array(len)
-        .fill(null)
-        .map((_, ci) => {
-          const secLen = chaptersArr[ci].sections.length;
-          const existingRow = Array.isArray(course.sectionProgress?.[ci])
-            ? course.sectionProgress[ci]
-                .slice(0, secLen)
-                .concat(
-                  Array(
-                    Math.max(0, secLen - course.sectionProgress[ci].length)
-                  ).fill(false)
-                )
-            : Array(secLen).fill(false);
-          return existingRow;
-        });
-      setSectionProgress(secProg);
-      setProgress(deriveChapterProgress(secProg, chaptersArr));
-    }
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/courses/${params.courseId}`);
+        if (!res.ok) throw new Error("Failed to load course");
+        const course = await res.json();
+        setCourseData(course);
+        const chaptersArr = splitMarkdownByChapters(course.roadmap);
+        const len = chaptersArr.length;
+        const secProg = Array(len)
+          .fill(null)
+          .map((_, ci) => {
+            const secLen = chaptersArr[ci].sections.length;
+            const existingRow = Array.isArray(course.sectionProgress?.[ci])
+              ? course.sectionProgress[ci]
+                  .slice(0, secLen)
+                  .concat(
+                    Array(
+                      Math.max(0, secLen - course.sectionProgress[ci].length)
+                    ).fill(false)
+                  )
+              : Array(secLen).fill(false);
+            return existingRow;
+          });
+        setSectionProgress(secProg);
+        setProgress(deriveChapterProgress(secProg, chaptersArr));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    load();
   }, [params.courseId]);
 
   const chapters = useMemo(
@@ -153,16 +157,12 @@ export default function CourseViewPage({ params }) {
     const nextProgress = deriveChapterProgress(next, chapters);
     setSectionProgress(next);
     setProgress(nextProgress);
-    const courses = JSON.parse(localStorage.getItem("courses") || "[]");
-    const idx = courses.findIndex((c) => c.id === params.courseId);
-    if (idx !== -1) {
-      courses[idx] = {
-        ...courses[idx],
-        sectionProgress: next,
-        progress: nextProgress,
-      };
-      localStorage.setItem("courses", JSON.stringify(courses));
-    }
+    // persist to API (fire and forget)
+    fetch(`/api/courses/${params.courseId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sectionProgress: next, progress: nextProgress }),
+    }).catch((err) => console.error(err));
   };
 
   const toggleSectionProgress = (cIdx, sIdx) => {

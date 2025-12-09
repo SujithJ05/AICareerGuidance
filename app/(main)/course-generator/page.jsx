@@ -2,17 +2,37 @@
 import { useEffect, useState } from "react";
 import { Plus, Book, Clock, Award, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { SignedIn, SignedOut, SignInButton, useAuth } from "@clerk/nextjs";
 import MultiStepCourseGenerator from "./multi-step";
 
 export default function CourseGeneratorPage() {
   const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
   const [showGenerator, setShowGenerator] = useState(false);
   const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchCourses = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/courses");
+      if (!res.ok) throw new Error("Failed to load courses");
+      const data = await res.json();
+      setCourses(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("courses") || "[]");
-    setCourses(saved);
-  }, []);
+    if (isLoaded && isSignedIn) {
+      fetchCourses();
+    } else if (isLoaded && !isSignedIn) {
+      setCourses([]);
+    }
+  }, [isLoaded, isSignedIn]);
 
   const computeCompletion = (course) => {
     const secProg = course.sectionProgress;
@@ -38,24 +58,44 @@ export default function CourseGeneratorPage() {
     return 0;
   };
 
-  const handleDelete = (id) => {
-    const updated = courses.filter((c) => c.id !== id);
-    setCourses(updated);
-    localStorage.setItem("courses", JSON.stringify(updated));
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(`/api/courses/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete course");
+      setCourses((prev) => prev.filter((c) => c.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // After returning from a created course page, refresh courses
-  useEffect(() => {
-    const handle = () => {
-      const saved = JSON.parse(localStorage.getItem("courses") || "[]");
-      setCourses(saved);
-    };
-    window.addEventListener("focus", handle);
-    return () => window.removeEventListener("focus", handle);
-  }, []);
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600">
+        Loading...
+      </div>
+    );
+  }
 
   if (showGenerator) {
-    return <MultiStepCourseGenerator />;
+    return (
+      <>
+        <SignedIn>
+          <MultiStepCourseGenerator />
+        </SignedIn>
+        <SignedOut>
+          <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white">
+            <h2 className="text-2xl font-semibold">
+              Please sign in to create courses.
+            </h2>
+            <SignInButton mode="modal">
+              <button className="bg-violet-600 text-white px-5 py-3 rounded-lg hover:bg-violet-700 transition">
+                Sign In
+              </button>
+            </SignInButton>
+          </div>
+        </SignedOut>
+      </>
+    );
   }
 
   return (
@@ -71,16 +111,27 @@ export default function CourseGeneratorPage() {
               layout.
             </p>
           </div>
-          <button
-            onClick={() => setShowGenerator(true)}
-            className="inline-flex items-center gap-2 bg-violet-600 text-white px-5 py-3 rounded-lg hover:bg-violet-700 transition shadow"
-          >
-            <Plus className="w-5 h-5" />
-            Create Course
-          </button>
+          <SignedIn>
+            <button
+              onClick={() => setShowGenerator(true)}
+              className="inline-flex items-center gap-2 bg-violet-600 text-white px-5 py-3 rounded-lg hover:bg-violet-700 transition shadow"
+            >
+              <Plus className="w-5 h-5" />
+              Create Course
+            </button>
+          </SignedIn>
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="inline-flex items-center gap-2 bg-violet-600 text-white px-5 py-3 rounded-lg hover:bg-violet-700 transition shadow">
+                <Plus className="w-5 h-5" /> Sign in to create
+              </button>
+            </SignInButton>
+          </SignedOut>
         </div>
 
-        {courses.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-10 text-gray-500">Loading...</div>
+        ) : courses.length === 0 ? (
           <div className="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
             <Book className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-700 mb-2">
@@ -89,12 +140,21 @@ export default function CourseGeneratorPage() {
             <p className="text-gray-500 mb-6">
               Create your first course to see it here.
             </p>
-            <button
-              onClick={() => setShowGenerator(true)}
-              className="inline-flex items-center gap-2 bg-violet-600 text-white px-5 py-3 rounded-lg hover:bg-violet-700 transition"
-            >
-              <Plus className="w-5 h-5" /> Start Creating
-            </button>
+            <SignedIn>
+              <button
+                onClick={() => setShowGenerator(true)}
+                className="inline-flex items-center gap-2 bg-violet-600 text-white px-5 py-3 rounded-lg hover:bg-violet-700 transition"
+              >
+                <Plus className="w-5 h-5" /> Start Creating
+              </button>
+            </SignedIn>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="inline-flex items-center gap-2 bg-violet-600 text-white px-5 py-3 rounded-lg hover:bg-violet-700 transition">
+                  <Plus className="w-5 h-5" /> Sign in to start
+                </button>
+              </SignInButton>
+            </SignedOut>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
