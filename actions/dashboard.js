@@ -1,12 +1,12 @@
 "use server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from "@anthropic-ai/sdk";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+const anthropic = new Anthropic({
+  apiKey: process.env.CLAUDE_API_KEY,
 });
+const MODEL_NAME = "claude-3-haiku-20240229";
 
 export const generateAIInsights = async (industry) => {
   const prompt = `
@@ -29,9 +29,12 @@ export const generateAIInsights = async (industry) => {
           Include at least 5 skills and trends.
         `;
 
-  const result = await model.generateContent(prompt);
-  const response = result.response;
-  const text = response.text();
+  const result = await anthropic.messages.create({
+    model: MODEL_NAME,
+    max_tokens: 4000,
+    messages: [{ role: "user", content: prompt }],
+  });
+  const text = result.content[0].text;
   const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
   return JSON.parse(cleanedText);
@@ -45,28 +48,33 @@ export async function getIndustryInsights() {
 
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
-    include: { industryInsight: true },
   });
   if (!user) throw new Error("user not found");
 
-  if (!user.industry) {
+  if (!user.industry || user.industry.length === 0) {
     // User hasn't selected an industry yet
     return null; // Or redirect to onboarding
   }
 
-  if (!user.industryInsight) {
-    const insights = await generateAIInsights(user.industry);
+  // Fetch the industry insight separately based on the user's first industry
+  // Assuming a user primarily focuses on their first listed industry for a single insight
+  let industryInsight = await db.industryInsight.findUnique({
+    where: { industry: user.industry[0] },
+  });
 
-    const industryInsight = await db.industryInsight.create({
+  if (!industryInsight) {
+    // If no existing insight, generate new ones
+    const insights = await generateAIInsights(user.industry[0]); // Pass the first industry
+
+    industryInsight = await db.industryInsight.create({
       data: {
-        industry: user.industry,
+        industry: user.industry[0], // Use the first industry for creation
         ...insights,
         nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
-
-    return industryInsight;
   }
+  // TODO: Add logic to update insight if nextUpdate is in the past
 
-  return user.industryInsight;
+  return industryInsight;
 }
