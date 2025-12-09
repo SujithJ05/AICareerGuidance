@@ -84,6 +84,16 @@ const Header = async () => {
                   </Link>
                 </DropdownMenuItem>
 
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/course-generator"
+                    className="flex items-center gap-2 w-full"
+                  >
+                    <ScanSearch className="h-4 w-4" />
+                    Course Generator
+                  </Link>
+                </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Subscription</DropdownMenuItem>
               </DropdownMenuContent>

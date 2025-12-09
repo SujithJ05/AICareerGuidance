@@ -52,6 +52,7 @@
     "react-spinners": "^0.17.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
+    "youtube-transcript": "^1.2.1",
     "zod": "^4.1.5"
   },
   "devDependencies": {
