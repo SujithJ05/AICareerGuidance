@@ -7,7 +7,7 @@ import Anthropic from "@anthropic-ai/sdk";
 const anthropic = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY,
 });
-const MODEL_NAME = "claude-3-haiku-20240229";
+const MODEL_NAME = "claude-sonnet-4-5-20250929";
 
 export async function generateQuiz() {
   const { userId } = await auth();
@@ -39,7 +39,7 @@ Return the response in this JSON format only, no additional text:
       "explanation": "string"
     }
   ]
-}   `
+}   `;
 
     const result = await anthropic.messages.create({
       model: MODEL_NAME,
@@ -112,27 +112,24 @@ Don't explicitly mention the mistakes, instead focus on what to learn/practice.
     console.error("Error generating improvement tip:", error);
   }
 
-  try{
-    const assessment=await db.assessment.create({
-        data:{
-            userId:user.id,
-            quizScore:score,
-            questions:questionResults,
-            category:"Technical",
-            improvementTip,
-        }
-    })
+  try {
+    const assessment = await db.assessment.create({
+      data: {
+        userId: user.id,
+        quizScore: score,
+        questions: questionResults,
+        category: "Technical",
+        improvementTip,
+      },
+    });
     return assessment;
-  }catch(error){
+  } catch (error) {
     console.error("Error saving quiz result:", error);
     throw new Error("Failed to save quiz result");
   }
-
 }
 
-
-export async function getAssessments(){
-
+export async function getAssessments() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -142,18 +139,18 @@ export async function getAssessments(){
     },
   });
 
-  if (!user) throw new Error("User not found")
+  if (!user) throw new Error("User not found");
 
-    try{
-      const assignments=await db.assessment.findMany({
-        where:{
-          userId:user.id},
-          orderBy:{createdAt:"asc"},
-        });
-        return assignments;
-    }catch(error){
-      console.error("Error fetching assignments:", error);
-      throw new Error("Failed to fetch assignments");
-    }
-
+  try {
+    const assignments = await db.assessment.findMany({
+      where: {
+        userId: user.id,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+    return assignments;
+  } catch (error) {
+    console.error("Error fetching assignments:", error);
+    throw new Error("Failed to fetch assignments");
+  }
 }

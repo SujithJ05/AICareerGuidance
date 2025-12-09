@@ -6,7 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 const anthropic = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY,
 });
-const MODEL_NAME = "claude-3-haiku-20240229";
+const MODEL_NAME = "claude-sonnet-4-5-20250929";
 
 export const generateAIInsights = async (industry) => {
   const prompt = `

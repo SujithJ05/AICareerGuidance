@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { onboardingSchema } from "@/app/lib/schema";
@@ -47,9 +47,98 @@ import { Button } from "@/components/ui/button";
 import useFetch from "@/hooks/use-fetch";
 import { updateUser } from "@/actions/user";
 
+const IndustryBadge = ({ ind, indId, onRemove }) => {
+  const handleRemoveIndustry = useCallback(
+    (e) => {
+      e.stopPropagation();
+      onRemove(indId);
+    },
+    [onRemove, indId]
+  );
+
+  return (
+    <Badge key={`${ind.id}-${ind.name}`} variant="secondary">
+      {ind.name}
+      <X
+        className="ml-1 h-3 w-3 cursor-pointer"
+        onClick={handleRemoveIndustry}
+      />
+    </Badge>
+  );
+};
+
+const IndustryCommandItem = ({ industry, selectedIds, onToggle }) => {
+  const isChecked = useMemo(() => {
+    return selectedIds?.includes(industry.id) || false;
+  }, [selectedIds, industry.id]);
+
+  const handleCheckedChange = useCallback(
+    (checked) => {
+      onToggle(industry.id, checked);
+    },
+    [onToggle, industry.id]
+  );
+
+  return (
+    <CommandItem
+      key={industry.id}
+      onSelect={() => onToggle(industry.id, !isChecked)}
+    >
+      <Checkbox
+        checked={isChecked}
+        onCheckedChange={handleCheckedChange}
+        className="mr-2"
+      />
+      {industry.name}
+    </CommandItem>
+  );
+};
+
+const SubIndustryBadge = ({ sub, onRemove }) => {
+  const handleRemoveSubIndustry = useCallback(
+    (e) => {
+      e.stopPropagation();
+      onRemove(sub);
+    },
+    [onRemove, sub]
+  );
+
+  return (
+    <Badge key={`${sub}-${sub.length}`} variant="secondary">
+      {sub}
+      <X
+        className="ml-1 h-3 w-3 cursor-pointer"
+        onClick={handleRemoveSubIndustry}
+      />
+    </Badge>
+  );
+};
+
+const SubIndustryCommandItem = ({ sub, selectedValues, onToggle }) => {
+  const isChecked = useMemo(() => {
+    return selectedValues?.includes(sub) || false;
+  }, [selectedValues, sub]);
+
+  const handleCheckedChange = useCallback(
+    (checked) => {
+      onToggle(sub, checked);
+    },
+    [onToggle, sub]
+  );
+
+  return (
+    <CommandItem key={sub} onSelect={() => onToggle(sub, !isChecked)}>
+      <Checkbox
+        checked={isChecked}
+        onCheckedChange={handleCheckedChange}
+        className="mr-2"
+      />
+      {sub}
+    </CommandItem>
+  );
+};
+
 const OnboardingForm = ({ industries }) => {
-
-
   const router = useRouter();
 
   const {
@@ -66,17 +155,97 @@ const OnboardingForm = ({ industries }) => {
     watch,
   } = useForm({
     resolver: zodResolver(onboardingSchema),
+    defaultValues: {
+      name: "",
+      industry: [],
+      subIndustry: [],
+      experience: 0,
+      skills: "",
+      bio: "",
+    },
   });
 
   const selectedIndustryIds = watch("industry") || [];
-  const availableSubIndustries = Array.from(new Set(
-    selectedIndustryIds.flatMap(id => {
-      const industry = industries.find(i => i.id === id);
-      return industry ? industry.subIndustries : [];
-    })
-  ));
+  const selectedSubIndustryValues = watch("subIndustry") || [];
 
+  const onIndustryToggle = useCallback(
+    (industryId, checked) => {
+      const currentSelection = watch("industry") || [];
+      let newSelection;
+      if (checked) {
+        // Only add if not already present
+        newSelection = currentSelection.includes(industryId)
+          ? currentSelection
+          : [...currentSelection, industryId];
+      } else {
+        newSelection = currentSelection.filter((id) => id !== industryId);
+      }
+      setValue("industry", newSelection);
+      setValue("subIndustry", []); // Clear subIndustries on industry change
+    },
+    [watch, setValue]
+  );
 
+  const onRemoveIndustry = useCallback(
+    (indIdToRemove) => {
+      const currentSelection = watch("industry") || [];
+      const newSelection = currentSelection.filter(
+        (id) => id !== indIdToRemove
+      );
+      setValue("industry", newSelection);
+      setValue("subIndustry", []); // Clear subIndustries if main industry is removed
+    },
+    [watch, setValue]
+  );
+
+  const onSubIndustryToggle = useCallback(
+    (subValue, checked) => {
+      const currentSelection = watch("subIndustry") || [];
+      let newSelection;
+      if (checked) {
+        // Only add if not already present
+        newSelection = currentSelection.includes(subValue)
+          ? currentSelection
+          : [...currentSelection, subValue];
+      } else {
+        newSelection = currentSelection.filter((s) => s !== subValue);
+      }
+      setValue("subIndustry", newSelection);
+    },
+    [watch, setValue]
+  );
+
+  const onRemoveSubIndustry = useCallback(
+    (subToRemove) => {
+      const currentSelection = watch("subIndustry") || [];
+      const newSelection = currentSelection.filter((s) => s !== subToRemove);
+      setValue("subIndustry", newSelection);
+    },
+    [watch, setValue]
+  );
+
+  const currentSubIndustriesRef = React.useRef([]);
+  const availableSubIndustries = useMemo(() => {
+    const newlyComputedSubIndustries = Array.from(
+      new Set(
+        selectedIndustryIds.flatMap((id) => {
+          const industry = industries.find((i) => i.id === id);
+          return industry ? industry.subIndustries : [];
+        })
+      )
+    );
+
+    // Compare content to maintain reference equality if content is the same
+    if (
+      JSON.stringify(newlyComputedSubIndustries) ===
+      JSON.stringify(currentSubIndustriesRef.current)
+    ) {
+      return currentSubIndustriesRef.current;
+    } else {
+      currentSubIndustriesRef.current = newlyComputedSubIndustries;
+      return newlyComputedSubIndustries;
+    }
+  }, [selectedIndustryIds, industries]);
 
   const onSubmit = async (values) => {
     console.log(values);
@@ -115,9 +284,7 @@ const OnboardingForm = ({ industries }) => {
               />
 
               {errors.name && (
-                <p className="text-sm text-red-500">
-                  {errors.name.message}
-                </p>
+                <p className="text-sm text-red-500">{errors.name.message}</p>
               )}
             </div>
 
@@ -131,64 +298,35 @@ const OnboardingForm = ({ industries }) => {
                     className="w-full justify-between"
                   >
                     <div className="flex flex-wrap gap-1">
-                      {watch("industry")?.length > 0 ? (
-                        watch("industry").map((indId) => {
-                          const ind = industries.find((i) => i.id === indId);
-                          return ind ? (
-                            <Badge key={ind.id} variant="secondary">
-                              {ind.name}
-                              <X
-                                className="ml-1 h-3 w-3 cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const newIndustries = watch("industry").filter(
-                                    (id) => id !== ind.id
-                                  );
-                                  setValue("industry", newIndustries);
-                                  setValue("subIndustry", []); // Clear subIndustries if main industry is removed
-                                }}
+                      {selectedIndustryIds?.length > 0
+                        ? selectedIndustryIds.map((indId, index) => {
+                            const ind = industries.find((i) => i.id === indId);
+                            return ind ? (
+                              <IndustryBadge
+                                key={ind.id}
+                                ind={ind}
+                                indId={indId}
+                                onRemove={onRemoveIndustry}
                               />
-                            </Badge>
-                          ) : null;
-                        })
-                      ) : (
-                        "Select industry(s)"
-                      )}
+                            ) : null;
+                          })
+                        : "Select industry(s)"}
                     </div>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                <PopoverContent className="w-72 p-0">
                   <Command>
                     <CommandInput placeholder="Search industry..." />
                     <CommandEmpty>No industry found.</CommandEmpty>
                     <CommandGroup>
                       {industries.map((industry) => (
-                        <CommandItem
+                        <IndustryCommandItem
                           key={industry.id}
-                          onSelect={() => {
-                            const currentSelection = watch("industry") || [];
-                            const newSelection = currentSelection.includes(industry.id)
-                              ? currentSelection.filter((id) => id !== industry.id)
-                              : [...currentSelection, industry.id];
-                            setValue("industry", newSelection);
-                            setValue("subIndustry", []); // Clear subIndustries on industry change
-                          }}
-                        >
-                          <Checkbox
-                            checked={watch("industry")?.includes(industry.id)}
-                            onCheckedChange={(checked) => {
-                              const currentSelection = watch("industry") || [];
-                              const newSelection = checked
-                                ? [...currentSelection, industry.id]
-                                : currentSelection.filter((id) => id !== industry.id);
-                              setValue("industry", newSelection);
-                              setValue("subIndustry", []); // Clear subIndustries on industry change
-                            }}
-                            className="mr-2"
-                          />
-                          {industry.name}
-                        </CommandItem>
+                          industry={industry}
+                          selectedIds={selectedIndustryIds}
+                          onToggle={onIndustryToggle}
+                        />
                       ))}
                     </CommandGroup>
                   </Command>
@@ -201,7 +339,7 @@ const OnboardingForm = ({ industries }) => {
               )}
             </div>
 
-            {watch("industry")?.length > 0 && (
+            {selectedIndustryIds?.length > 0 && (
               <div className="space-y-2 p-2">
                 <Label htmlFor="subIndustry">Specialization</Label>
                 <Popover>
@@ -213,58 +351,31 @@ const OnboardingForm = ({ industries }) => {
                       disabled={availableSubIndustries.length === 0}
                     >
                       <div className="flex flex-wrap gap-1">
-                        {watch("subIndustry")?.length > 0 ? (
-                          watch("subIndustry").map((sub) => (
-                            <Badge key={sub} variant="secondary">
-                              {sub}
-                              <X
-                                className="ml-1 h-3 w-3 cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const newSubIndustries = watch("subIndustry").filter(
-                                    (s) => s !== sub
-                                  );
-                                  setValue("subIndustry", newSubIndustries);
-                                }}
+                        {selectedSubIndustryValues?.length > 0
+                          ? selectedSubIndustryValues.map((sub) => (
+                              <SubIndustryBadge
+                                key={`${sub}-${sub.length}`}
+                                sub={sub}
+                                onRemove={onRemoveSubIndustry}
                               />
-                            </Badge>
-                          ))
-                        ) : (
-                          "Select specialization(s)"
-                        )}
+                            ))
+                          : "Select specialization(s)"}
                       </div>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                  <PopoverContent className="w-72 p-0">
                     <Command>
                       <CommandInput placeholder="Search specialization..." />
                       <CommandEmpty>No specialization found.</CommandEmpty>
                       <CommandGroup>
                         {availableSubIndustries.map((sub) => (
-                          <CommandItem
+                          <SubIndustryCommandItem
                             key={sub}
-                            onSelect={() => {
-                              const currentSelection = watch("subIndustry") || [];
-                              const newSelection = currentSelection.includes(sub)
-                                ? currentSelection.filter((s) => s !== sub)
-                                : [...currentSelection, sub];
-                              setValue("subIndustry", newSelection);
-                            }}
-                          >
-                            <Checkbox
-                              checked={watch("subIndustry")?.includes(sub)}
-                              onCheckedChange={(checked) => {
-                                const currentSelection = watch("subIndustry") || [];
-                                const newSelection = checked
-                                  ? [...currentSelection, sub]
-                                  : currentSelection.filter((s) => s !== sub);
-                                setValue("subIndustry", newSelection);
-                              }}
-                              className="mr-2"
-                            />
-                            {sub}
-                          </CommandItem>
+                            sub={sub}
+                            selectedValues={selectedSubIndustryValues}
+                            onToggle={onSubIndustryToggle}
+                          />
                         ))}
                       </CommandGroup>
                     </Command>

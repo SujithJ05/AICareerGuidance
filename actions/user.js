@@ -3,7 +3,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 
-
 export async function updateUser(data) {
   const { userId } = await auth();
   if (!userId) {
@@ -27,7 +26,9 @@ export async function updateUser(data) {
         id: user.id,
       },
       data: {
-        industry: data.industry, // This will now be an array
+        industry: Array.isArray(data.industry)
+          ? data.industry.join(",")
+          : data.industry,
         specializations: data.subIndustry, // Map to the new specializations array field
         name: data.name,
         bio: data.bio,

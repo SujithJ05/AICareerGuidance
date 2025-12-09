@@ -7,7 +7,7 @@ import Anthropic from "@anthropic-ai/sdk";
 const anthropic = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY,
 });
-const MODEL_NAME = "claude-3-haiku-20240229";
+const MODEL_NAME = "claude-sonnet-4-5-20250929";
 
 export async function saveResume({ title, content, resumeId }) {
   const { userId } = await auth();
@@ -58,28 +58,28 @@ export async function getResumes() {
 }
 
 export async function getResumeById(resumeId) {
-    const { userId } = await auth();
-    if (!userId) {
-        throw new Error("User not authenticated");
-    }
-    
-    const resume = await db.resume.findUnique({
-        where: { id: resumeId },
-    });
-    
-    if (!resume) {
-        throw new Error("Resume not found");
-    }
-    
-    const user = await db.user.findUnique({
-        where: { clerkUserId: userId },
-    });
-    
-    if (resume.userId !== user.id) {
-        throw new Error("User not authorized to view this resume");
-    }
-    
-    return resume;
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
+
+  const resume = await db.resume.findUnique({
+    where: { id: resumeId },
+  });
+
+  if (!resume) {
+    throw new Error("Resume not found");
+  }
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (resume.userId !== user.id) {
+    throw new Error("User not authorized to view this resume");
+  }
+
+  return resume;
 }
 
 export async function deleteResume(resumeId) {
