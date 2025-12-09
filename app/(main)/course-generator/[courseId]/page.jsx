@@ -192,7 +192,7 @@ export default function CourseViewPage({ params }) {
 
   if (!courseData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center">
           <p className="text-gray-500">Loading course...</p>
         </div>
@@ -200,31 +200,29 @@ export default function CourseViewPage({ params }) {
     );
   }
   return (
-    <div className="min-h-screen bg-gray-100 pt-16">
+    <div className="min-h-screen bg-white pt-16">
       {/* Header */}
-      <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
+      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <button
           onClick={() => router.push("/course-generator")}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="flex items-center gap-2 text-gray-500 hover:text-black"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>Back to Course Generator</span>
         </button>
-        <h1 className="text-xl font-bold text-violet-700">
-          {courseData.title}
-        </h1>
+        <h1 className="text-xl font-bold text-black">{courseData.title}</h1>
         <div className="w-32"></div> {/* Spacer for centering */}
       </div>
 
       {/* Course Content */}
       <div className="flex h-[calc(100vh-73px)]">
         {/* Sidebar */}
-        <div className="w-80 bg-violet-600 text-white flex flex-col">
-          <div className="p-6 border-b border-violet-500">
+        <div className="w-80 bg-black text-white flex flex-col">
+          <div className="p-6 border-b border-gray-700">
             <h2 className="text-2xl font-bold mb-2">{courseData.title}</h2>
-            <p className="text-violet-100 text-sm">{courseData.description}</p>
+            <p className="text-gray-300 text-sm">{courseData.description}</p>
             <div className="mt-4 flex items-center gap-4 text-sm">
-              <span className="bg-violet-500 px-3 py-1 rounded">
+              <span className="bg-gray-700 px-3 py-1 rounded">
                 {courseData.difficulty}
               </span>
               <span className="flex items-center gap-1">
@@ -238,8 +236,8 @@ export default function CourseViewPage({ params }) {
             {chapters.map((ch, idx) => (
               <button
                 key={idx}
-                className={`w-full text-left px-6 py-4 border-b border-violet-500 transition-all ${
-                  selected === idx ? "bg-violet-500" : "hover:bg-violet-700"
+                className={`w-full text-left px-6 py-4 border-b border-gray-700 transition-all ${
+                  selected === idx ? "bg-gray-700" : "hover:bg-gray-800"
                 }`}
                 onClick={() => {
                   setSelected(idx);
@@ -257,9 +255,7 @@ export default function CourseViewPage({ params }) {
                   </div>
                   <span
                     className={`flex items-center justify-center min-w-[28px] h-7 rounded-full font-bold text-sm ${
-                      selected === idx
-                        ? "bg-white text-violet-600"
-                        : "bg-violet-500"
+                      selected === idx ? "bg-white text-black" : "bg-gray-700"
                     }`}
                   >
                     {idx + 1}
@@ -267,7 +263,7 @@ export default function CourseViewPage({ params }) {
                   <div className="flex-1">
                     <div className="font-semibold text-sm">{ch.title}</div>
                     {ch.duration && (
-                      <div className="text-xs text-violet-200 mt-1 flex items-center gap-1">
+                      <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {ch.duration.replace("⏱️", "").trim()}
                       </div>
@@ -282,7 +278,7 @@ export default function CourseViewPage({ params }) {
                               [idx]: !prev[idx],
                             }));
                           }}
-                          className="flex items-center gap-1 text-sm text-white/90 hover:text-white"
+                          className="flex items-center gap-1 text-sm text-gray-300 hover:text-white"
                         >
                           {expanded[idx] ? (
                             <ChevronDown className="w-3 h-3" />
@@ -299,7 +295,7 @@ export default function CourseViewPage({ params }) {
                                 e.stopPropagation();
                                 goToSection(idx, sIdx, false);
                               }}
-                              className="flex items-center gap-2 w-full text-left text-sm text-white/90 hover:text-white truncate"
+                              className="flex items-center gap-2 w-full text-left text-sm text-gray-300 hover:text-white truncate"
                             >
                               {sectionProgress[idx]?.[sIdx] ? (
                                 <CheckSquare className="w-4 h-4" />
@@ -326,25 +322,25 @@ export default function CourseViewPage({ params }) {
                 components={{
                   code({ node, inline, className, children, ...props }) {
                     return !inline ? (
-                      <pre className="bg-gray-900 text-green-400 rounded-lg p-6 overflow-x-auto my-6 font-mono text-sm">
+                      <pre className="bg-black text-white rounded-lg p-6 overflow-x-auto my-6 font-mono text-sm">
                         <code>{children}</code>
                       </pre>
                     ) : (
-                      <code className="bg-gray-100 text-red-600 px-2 py-1 rounded text-sm font-mono">
+                      <code className="bg-gray-100 text-black px-2 py-1 rounded text-sm font-mono">
                         {children}
                       </code>
                     );
                   },
                   h1({ children }) {
                     return (
-                      <h1 className="text-3xl font-bold mt-8 mb-4 text-gray-900">
+                      <h1 className="text-3xl font-bold mt-8 mb-4 text-black">
                         {children}
                       </h1>
                     );
                   },
                   h2({ children }) {
                     return (
-                      <h2 className="text-2xl font-bold mt-6 mb-3 text-violet-700">
+                      <h2 className="text-2xl font-bold mt-6 mb-3 text-black">
                         {children}
                       </h2>
                     );
@@ -357,7 +353,7 @@ export default function CourseViewPage({ params }) {
                     return (
                       <h3
                         id={id}
-                        className="text-xl font-semibold mt-4 mb-2 text-gray-800"
+                        className="text-xl font-semibold mt-4 mb-2 text-black"
                       >
                         {children}
                       </h3>
@@ -365,7 +361,7 @@ export default function CourseViewPage({ params }) {
                   },
                   p({ children }) {
                     return (
-                      <p className="mb-4 text-gray-700 leading-relaxed">
+                      <p className="mb-4 text-gray-600 leading-relaxed">
                         {children}
                       </p>
                     );
@@ -385,7 +381,7 @@ export default function CourseViewPage({ params }) {
                     );
                   },
                   li({ children }) {
-                    return <li className="text-gray-700">{children}</li>;
+                    return <li className="text-gray-600">{children}</li>;
                   },
                 }}
               >
@@ -401,8 +397,8 @@ export default function CourseViewPage({ params }) {
                 disabled={selectedSection === 0}
                 className={`px-4 py-2 rounded border ${
                   selectedSection === 0
-                    ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                    : "text-gray-700 border-gray-300 hover:bg-gray-100"
+                    ? "text-gray-400 border-gray-300 cursor-not-allowed"
+                    : "text-black border-gray-300 hover:bg-gray-100"
                 }`}
               >
                 Previous
@@ -417,7 +413,7 @@ export default function CourseViewPage({ params }) {
                     goToSection(selected + 1, 0, false);
                   }
                 }}
-                className="px-4 py-2 rounded bg-violet-600 text-white hover:bg-violet-700"
+                className="px-4 py-2 rounded bg-black text-white hover:bg-gray-800"
               >
                 Next
               </button>

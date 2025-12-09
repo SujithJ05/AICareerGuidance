@@ -122,16 +122,15 @@
   }
 }
 
-
 @layer base {
   :root {
-    --background: 0 0% 100%;   /* Light background (white) */
-    --foreground: 0 0% 0%;     /* Light text (black) */
+    --background: 0 0% 100%; /* Light background (white) */
+    --foreground: 0 0% 0%; /* Light text (black) */
   }
 
   .dark {
-    --background: 0 0% 0%;     /* Dark background (black) */
-    --foreground: 0 0% 100%;   /* Dark text (white) */
+    --background: 0 0% 0%; /* Dark background (black) */
+    --foreground: 0 0% 100%; /* Dark text (white) */
   }
 }
 
@@ -139,4 +138,18 @@
 #resume-pdf * {
   color: black !important;
   background-color: white !important;
+}
+
+/* Shimmer animation for loading progress bar */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
 }
