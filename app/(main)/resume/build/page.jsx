@@ -22,7 +22,7 @@ import { resumeSchema } from "@/app/lib/schema";
 import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { EntryForm } from "./entry-form.jsx";
+import { EntryForm } from "../_components/entry-form.jsx";
 
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { useUser } from "@clerk/nextjs";
@@ -40,9 +40,9 @@ import {
 //import dynamic from "next/dynamic";
 //const html2pdf = dynamic(() => import("html2pdf.js"), { ssr: false });
 
-import { AtsChecker } from "./ats-checker.jsx";
+import { AtsChecker } from "../_components/ats-checker.jsx";
 
-const ResumeBuilder = ({ initialContent }) => {
+const ResumeBuilderPage = ({ initialContent }) => {
   const [previewContent, setPreviewContent] = useState(initialContent);
 
   const [isGenerating, setIsGenerating] = useState(false);
@@ -91,7 +91,13 @@ const ResumeBuilder = ({ initialContent }) => {
 
     return parts.length > 0
       ? `## <div align="center">${contactInfo.name}</div>
-        \n\n<div align="center">\n\n${parts.join(" | ")}\n\n</div>`
+        
+
+<div align="center">
+
+${parts.join(" | ")}
+
+</div>`
       : "";
   };
 
@@ -119,14 +125,8 @@ const ResumeBuilder = ({ initialContent }) => {
 
   const onSubmit = async (data) => {
     try {
-      console.log("button clicked");
-      const formattedContent = previewContent
-        .replace(/\n/g, "\n") // Normalize newlines
-        .replace(/\n\s*\n/g, "\n\n") // Normalize multiple newlines to double newlines
-        .trim();
-
-      console.log(previewContent, formattedContent);
-      await saveResumeFn(previewContent);
+      const resumeContent = JSON.stringify(data);
+      await saveResumeFn({ title: data.contactInfo.name, content: resumeContent });
     } catch (error) {
       console.error("Save error:", error);
     }
@@ -279,39 +279,6 @@ const ResumeBuilder = ({ initialContent }) => {
     }
   };
 
-  //   const generatePDF = async () => {
-  //   if (typeof window === "undefined") return; // prevent SSR errors
-  //   setIsGenerating(true);
-
-  //   try {
-
-  //     const html2pdfModule = await import("html2pdf.js");
-  //     const html2pdf = html2pdfModule.default;
-
-  //     const element = document.getElementById("resume-pdf");
-
-  //     if (!element) {
-  //       console.error(" Resume element not found!");
-  //       setIsGenerating(false);
-  //       return;
-  //     }
-
-  //     const opt = {
-  //       margin: [15, 15],
-  //       filename: "resume.pdf",
-  //       image: { type: "jpeg", quality: 0.98 },
-  //       html2canvas: { scale: 2 },
-  //       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-  //     };
-
-  //     await html2pdf().set(opt).from(element).save();
-  //   } catch (error) {
-  //     console.error("PDF generation error:", error);
-  //   } finally {
-  //     setIsGenerating(false);
-  //   }
-  // };
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row justify-between items-center gap-2">
@@ -352,9 +319,9 @@ const ResumeBuilder = ({ initialContent }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-10 gap-8">
         {/* Form Section */}
-        <div className="space-y-8">
+        <div className="col-span-3 space-y-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Personal Information</h3>
@@ -372,19 +339,7 @@ const ResumeBuilder = ({ initialContent }) => {
                     </p>
                   )}
                 </div>
-                <div>
-                  <label className="text-sm font-medium">Username</label>
-                  <Input
-                    {...register("contactInfo.username")}
-                    placeholder="Your Username"
-                    error={errors.contactInfo?.username}
-                  />
-                  {errors.contactInfo?.username && (
-                    <p className="text-sm text-red-600">
-                      {errors.contactInfo.username.message}
-                    </p>
-                  )}
-                </div>
+
                 <div>
                   <label className="text-sm font-medium">Email</label>
                   <Input
@@ -431,7 +386,7 @@ const ResumeBuilder = ({ initialContent }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Github:</label>
+                  <label className="text-sm font-medium">GitHub:</label>
                   <Input
                     {...register("contactInfo.github")}
                     type="url"
@@ -553,19 +508,20 @@ const ResumeBuilder = ({ initialContent }) => {
           </form>
         </div>
         {/* Preview Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Live Preview</h3>
-                    <div className="border rounded-lg h-full p-4 overflow-auto">
-                      <MDEditor.Markdown
-                        source={previewContent}
-                        style={{
-                          background: "white",
-                          color: "black",
-                          minHeight: "100%",
-                        }}
-                      />
-                    </div>
-                  </div>      </div>
+        <div className="col-span-7 space-y-4">
+          <h3 className="text-lg font-medium">Live Preview</h3>
+          <div className="border rounded-lg h-full p-4 overflow-auto">
+            <MDEditor.Markdown
+              source={previewContent}
+              style={{
+                background: "white",
+                color: "black",
+                minHeight: "100%",
+              }}
+            />
+          </div>
+        </div>
+      </div>
 
       <Tabs defaultValue="ats">
         <TabsList>
@@ -579,4 +535,4 @@ const ResumeBuilder = ({ initialContent }) => {
   );
 };
 
-export default ResumeBuilder;
+export default ResumeBuilderPage;

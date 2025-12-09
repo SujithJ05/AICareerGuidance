@@ -2,72 +2,127 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { revalidatePath } from "next/cache";
+import Anthropic from "@anthropic-ai/sdk";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const anthropic = new Anthropic({
+  apiKey: process.env.CLAUDE_API_KEY,
+});
+const MODEL_NAME = "claude-3-haiku-20240229";
 
-
-export async function saveResume(content) {
-
-    const { userId } = await auth();
+export async function saveResume({ title, content, resumeId }) {
+  const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
   }
 
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
-    
   });
   if (!user) throw new Error("user not found");
 
-
-  try{
-    const resume =await db.resume.upsert({
-        where:{userId:user.id},
-        update:{content,},
-        create:{userId:user.id,content}
-
-    })
-    revalidatePath("/resume")
+  if (resumeId) {
+    // Update existing resume
+    const resume = await db.resume.update({
+      where: { id: resumeId },
+      data: { title, content },
+    });
+    revalidatePath("/resume");
     return resume;
-  } catch(error){
-    console.error("error saving resume",error);
-    throw new Error("Error saving resume");
+  } else {
+    // Create new resume
+    const resume = await db.resume.create({
+      data: {
+        userId: user.id,
+        title,
+        content,
+      },
+    });
+    revalidatePath("/resume");
+    return resume;
   }
 }
 
-export async function getResume(){
-    const {userId}=await auth();
-    if(!userId){
+export async function getResumes() {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+  if (!user) return [];
+
+  return await db.resume.findMany({
+    where: { userId: user.id },
+  });
+}
+
+export async function getResumeById(resumeId) {
+    const { userId } = await auth();
+    if (!userId) {
         throw new Error("User not authenticated");
     }
-    const user=await db.user.findUnique({
-        where:{clerkUserId:userId},
+    
+    const resume = await db.resume.findUnique({
+        where: { id: resumeId },
     });
-    if(!user) throw new Error("user not found");
-
-    return await db.resume.findUnique({
-        where:{userId:user.id},
-    })
+    
+    if (!resume) {
+        throw new Error("Resume not found");
+    }
+    
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+    });
+    
+    if (resume.userId !== user.id) {
+        throw new Error("User not authorized to view this resume");
+    }
+    
+    return resume;
 }
 
-export async function improveWithAI({current,type}){
+export async function deleteResume(resumeId) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
 
-     const { userId } = await auth();
+  const resume = await db.resume.findUnique({
+    where: { id: resumeId },
+  });
+
+  if (!resume) {
+    throw new Error("Resume not found");
+  }
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (resume.userId !== user.id) {
+    throw new Error("User not authorized to delete this resume");
+  }
+
+  await db.resume.delete({
+    where: { id: resumeId },
+  });
+
+  revalidatePath("/resume");
+}
+
+export async function improveWithAI({ current, type }) {
+  const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
   }
 
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
-    
   });
   if (!user) throw new Error("user not found");
 
-
-   const prompt = `
+  const prompt = `
     As an expert resume writer, improve the following ${type} description for a ${user.industry} professional.
     Make it more impactful, quantifiable, and aligned with industry standards.
     Current content: "${current}"
@@ -82,19 +137,19 @@ export async function improveWithAI({current,type}){
     
     Format the response as a single paragraph without any additional text or explanations.
   `;
-    try{
-        const result=await model.generateContent(prompt)
-        const response=result.response;
-        const improvedresponse=response.text().trim();
-        return improvedresponse;
-    }catch(error){
-        console.error("error improving resume",error);
-        throw new Error("Error improving resume");
-
-    }
-
+  try {
+    const result = await anthropic.messages.create({
+      model: MODEL_NAME,
+      max_tokens: 4000,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const improvedresponse = result.content[0].text.trim();
+    return improvedresponse;
+  } catch (error) {
+    console.error("error improving resume", error);
+    throw new Error("Error improving resume");
+  }
 }
-
 
 export async function checkAts(resumeContent, jobDescription) {
   const { userId } = await auth();
@@ -127,17 +182,15 @@ export async function checkAts(resumeContent, jobDescription) {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = await response.text();
+    const result = await anthropic.messages.create({
+      model: MODEL_NAME,
+      max_tokens: 4000,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const text = result.content[0].text;
     return text;
   } catch (error) {
     console.error("error checking ats", error);
     throw new Error("Error checking ats");
   }
 }
-  
-  
-
-  
-  

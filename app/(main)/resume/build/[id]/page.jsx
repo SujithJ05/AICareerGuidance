@@ -11,22 +11,22 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import useFetch from "@/hooks/use-fetch";
-import { saveResume } from "@/actions/resume";
+import { saveResume, getResumeById } from "@/actions/resume";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { resumeSchema } from "@/app/lib/schema";
-import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { EntryForm } from "./entry-form.jsx";
+import { EntryForm } from "../../_components/entry-form.jsx";
 
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { useUser } from "@clerk/nextjs";
 import MDEditor from "@uiw/react-md-editor";
+import { useParams } from "next/navigation";
 
 import {
   pdf,
@@ -40,11 +40,11 @@ import {
 //import dynamic from "next/dynamic";
 //const html2pdf = dynamic(() => import("html2pdf.js"), { ssr: false });
 
-import { AtsChecker } from "./ats-checker.jsx";
+import { AtsChecker } from "../../_components/ats-checker.jsx";
 
-const ResumeBuilder = ({ initialContent }) => {
-  const [previewContent, setPreviewContent] = useState(initialContent);
-
+const EditResumePage = () => {
+  const { id: resumeId } = useParams();
+  const [previewContent, setPreviewContent] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const { user } = useUser();
   const {
@@ -52,13 +52,12 @@ const ResumeBuilder = ({ initialContent }) => {
     register,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(resumeSchema),
     defaultValues: {
-      contactInfo: {
-        name: user?.fullName || "",
-      },
+      contactInfo: { name: user?.fullName || "" },
       summary: "",
       skills: "",
       experience: [],
@@ -76,8 +75,21 @@ const ResumeBuilder = ({ initialContent }) => {
   const formValues = watch();
 
   useEffect(() => {
+    if (resumeId) {
+      const fetchResume = async () => {
+        const resume = await getResumeById(resumeId);
+        if (resume) {
+          const resumeData = JSON.parse(resume.content);
+          reset(resumeData);
+        }
+      };
+      fetchResume();
+    }
+  }, [resumeId, reset]);
+
+  useEffect(() => {
     const newContent = getCombinedContent();
-    setPreviewContent(newContent ? newContent : initialContent);
+    setPreviewContent(newContent);
   }, [formValues]);
 
   const getContactMarkdown = () => {
@@ -87,11 +99,18 @@ const ResumeBuilder = ({ initialContent }) => {
     if (contactInfo.mobile) parts.push(`📱 ${contactInfo.mobile}`);
     if (contactInfo.linkedin)
       parts.push(`💼 [LinkedIn](${contactInfo.linkedin})`);
-    if (contactInfo.github) parts.push(`💻 [GitHub](${contactInfo.github})`);
+    if (contactInfo.github) parts.push(`💻 [GitHub](${contactInfo.github})
+`);
 
     return parts.length > 0
       ? `## <div align="center">${contactInfo.name}</div>
-        \n\n<div align="center">\n\n${parts.join(" | ")}\n\n</div>`
+        
+
+<div align="center">
+
+${parts.join(" | ")}
+
+</div>`
       : "";
   };
 
@@ -119,14 +138,8 @@ const ResumeBuilder = ({ initialContent }) => {
 
   const onSubmit = async (data) => {
     try {
-      console.log("button clicked");
-      const formattedContent = previewContent
-        .replace(/\n/g, "\n") // Normalize newlines
-        .replace(/\n\s*\n/g, "\n\n") // Normalize multiple newlines to double newlines
-        .trim();
-
-      console.log(previewContent, formattedContent);
-      await saveResumeFn(previewContent);
+      const resumeContent = JSON.stringify(data);
+      await saveResumeFn({ title: data.contactInfo.name, content: resumeContent, resumeId });
     } catch (error) {
       console.error("Save error:", error);
     }
@@ -138,12 +151,7 @@ const ResumeBuilder = ({ initialContent }) => {
     setIsGenerating(true);
     try {
       const styles = StyleSheet.create({
-        page: {
-          padding: 30,
-          fontSize: 11,
-          lineHeight: 1.5,
-          fontFamily: "Helvetica",
-        },
+        page: { padding: 30, fontSize: 11, lineHeight: 1.5, fontFamily: "Helvetica" },
         header: { textAlign: "center", marginBottom: 15 },
         name: { fontSize: 20, fontWeight: "bold", marginBottom: 4 },
         contact: { fontSize: 10, color: "#444" },
@@ -176,22 +184,16 @@ const ResumeBuilder = ({ initialContent }) => {
                   flexWrap: "wrap",
                 }}
               >
-                {data.contactInfo?.email && (
-                  <Text>{data.contactInfo.email}</Text>
-                )}
-                {data.contactInfo?.mobile && (
-                  <Text> | {data.contactInfo.mobile}</Text>
-                )}
+                {data.contactInfo?.email && <Text>{data.contactInfo.email}</Text>}
+                {data.contactInfo?.mobile && <Text> | {data.contactInfo.mobile}</Text>}
                 {data.contactInfo?.linkedin && (
                   <Text>
-                    {" "}
-                    | <Link src={data.contactInfo.linkedin}>LinkedIn</Link>
+                    {" "} | <Link src={data.contactInfo.linkedin}>LinkedIn</Link>
                   </Text>
                 )}
                 {data.contactInfo?.github && (
                   <Text>
-                    {" "}
-                    | <Link src={data.contactInfo.github}>GitHub</Link>
+                    {" "} | <Link src={data.contactInfo.github}>GitHub</Link>
                   </Text>
                 )}
               </View>
@@ -279,43 +281,10 @@ const ResumeBuilder = ({ initialContent }) => {
     }
   };
 
-  //   const generatePDF = async () => {
-  //   if (typeof window === "undefined") return; // prevent SSR errors
-  //   setIsGenerating(true);
-
-  //   try {
-
-  //     const html2pdfModule = await import("html2pdf.js");
-  //     const html2pdf = html2pdfModule.default;
-
-  //     const element = document.getElementById("resume-pdf");
-
-  //     if (!element) {
-  //       console.error(" Resume element not found!");
-  //       setIsGenerating(false);
-  //       return;
-  //     }
-
-  //     const opt = {
-  //       margin: [15, 15],
-  //       filename: "resume.pdf",
-  //       image: { type: "jpeg", quality: 0.98 },
-  //       html2canvas: { scale: 2 },
-  //       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-  //     };
-
-  //     await html2pdf().set(opt).from(element).save();
-  //   } catch (error) {
-  //     console.error("PDF generation error:", error);
-  //   } finally {
-  //     setIsGenerating(false);
-  //   }
-  // };
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row justify-between items-center gap-2">
-        <h1 className="text-6xl font-bold gradient-title">Resume Builder</h1>
+        <h1 className="text-6xl font-bold gradient-title">Edit Resume</h1>
 
         <div className="space-x-2">
           <Button
@@ -352,9 +321,9 @@ const ResumeBuilder = ({ initialContent }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-10 gap-8">
         {/* Form Section */}
-        <div className="space-y-8">
+        <div className="col-span-3 space-y-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Personal Information</h3>
@@ -369,19 +338,6 @@ const ResumeBuilder = ({ initialContent }) => {
                   {errors.contactInfo?.name && (
                     <p className="text-sm text-red-600">
                       {errors.contactInfo.name.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Username</label>
-                  <Input
-                    {...register("contactInfo.username")}
-                    placeholder="Your Username"
-                    error={errors.contactInfo?.username}
-                  />
-                  {errors.contactInfo?.username && (
-                    <p className="text-sm text-red-600">
-                      {errors.contactInfo.username.message}
                     </p>
                   )}
                 </div>
@@ -431,7 +387,7 @@ const ResumeBuilder = ({ initialContent }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Github:</label>
+                  <label className="text-sm font-medium">GitHub:</label>
                   <Input
                     {...register("contactInfo.github")}
                     type="url"
@@ -553,30 +509,17 @@ const ResumeBuilder = ({ initialContent }) => {
           </form>
         </div>
         {/* Preview Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Live Preview</h3>
-                    <div className="border rounded-lg h-full p-4 overflow-auto">
-                      <MDEditor.Markdown
-                        source={previewContent}
-                        style={{
-                          background: "white",
-                          color: "black",
-                          minHeight: "100%",
-                        }}
-                      />
-                    </div>
-                  </div>      </div>
-
-      <Tabs defaultValue="ats">
-        <TabsList>
-          <TabsTrigger value="ats">ATS</TabsTrigger>
-        </TabsList>
-        <TabsContent value="ats">
-          <AtsChecker content={previewContent} />
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-};
-
-export default ResumeBuilder;
+        <div className="col-span-7 space-y-4">
+          <h3 className="text-lg font-medium">Live Preview</h3>
+          <div className="border rounded-lg h-full p-4 overflow-auto">
+            <MDEditor.Markdown
+              source={previewContent}
+              style={{
+                background: "white",
+                color: "black",
+                minHeight: "100%",
+              }}
+            />
+          </div>
+        </div>
+      </div>

@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
-import { generateAIInsights } from "./dashboard";
+
 
 export async function updateUser(data) {
   const { userId } = await auth();
@@ -22,53 +22,23 @@ export async function updateUser(data) {
   }
 
   try {
-    const result = await db.$transaction(
-      async (tx) => {
-        // First check if industry exists
-        let industryInsight = await tx.industryInsight.findUnique({
-          where: {
-            industry: data.industry,
-          },
-        });
-
-        // If industry is not unique in schema, replace with findFirst:
-        // let industryInsight = await tx.industryInsight.findFirst({ where: { industry: data.industry } });
-
-        if (!industryInsight) {
-          const insights = await generateAIInsights(data.industry);
-
-          industryInsight = await tx.industryInsight.create({
-            data: {
-              industry: data.industry,
-              ...insights,
-              nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            },
-          });
-        }
-
-        const updatedUser = await tx.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            industry: data.industry,
-            name: data.name,
-            bio: data.bio,
-            experience: data.experience,
-            skills: data.skills, // Make sure skills column is String[] or Json in schema
-          },
-        });
-
-        return { updatedUser, industryInsight };
+    const updatedUser = await db.user.update({
+      where: {
+        id: user.id,
       },
-      {
-        timeout: 10000,
-      }
-    );
+      data: {
+        industry: data.industry, // This will now be an array
+        specializations: data.subIndustry, // Map to the new specializations array field
+        name: data.name,
+        bio: data.bio,
+        experience: data.experience,
+        skills: data.skills,
+      },
+    });
 
-    return { success: true, ...result };
+    return { success: true, updatedUser };
   } catch (error) {
-    console.error("Error updating user and industry:", error);
+    console.error("Error updating user profile:", error);
     throw new Error("Error updating profile: " + error.message);
   }
 }

@@ -2,13 +2,12 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from "@anthropic-ai/sdk";
 
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+const anthropic = new Anthropic({
+  apiKey: process.env.CLAUDE_API_KEY,
 });
+const MODEL_NAME = "claude-3-haiku-20240229";
 
 export async function generateQuiz() {
   const { userId } = await auth();
@@ -42,9 +41,12 @@ Return the response in this JSON format only, no additional text:
   ]
 }   `
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const result = await anthropic.messages.create({
+      model: MODEL_NAME,
+      max_tokens: 4000,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const text = result.content[0].text;
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
     const quiz = JSON.parse(cleanedText);
@@ -100,9 +102,12 @@ Don't explicitly mention the mistakes, instead focus on what to learn/practice.
 `;
 
   try {
-    const result = await model.generateContent(improvementPrompt);
-    const response = result.response;
-    improvementTip = response.text().trim();
+    const result = await anthropic.messages.create({
+      model: MODEL_NAME,
+      max_tokens: 4000,
+      messages: [{ role: "user", content: improvementPrompt }],
+    });
+    improvementTip = result.content[0].text.trim();
   } catch (error) {
     console.error("Error generating improvement tip:", error);
   }

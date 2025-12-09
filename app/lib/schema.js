@@ -3,12 +3,8 @@ import { z } from "zod";
 export const onboardingSchema = z.object({
   name: z.string().min(1, "Name is required"),
 
-  industry: z.string({
-    required_error: "Please select an industry",
-  }),
-  subIndustry: z.string({
-    required_error: "Please select a specialization",
-  }),
+  industry: z.array(z.string().min(1, "Each industry must have a value")),
+  subIndustry: z.array(z.string().min(1, "Each specialization must have a value")),
   bio: z.string().max(500).optional(),
   experience: z
     .string()
@@ -30,6 +26,7 @@ export const onboardingSchema = z.object({
 });
 
 export const contactSchema = z.object({
+  name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
   mobile: z.string().optional(),
   linkedin: z.string().optional(),
@@ -41,7 +38,7 @@ export const contactSchema = z.object({
 export const entrySchema = z
   .object({
     title: z.string().min(1, "Title is required"),
-    organization: z.string().min(1, "Organization is required"),
+    organization: z.string().optional(),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().optional(),
     description: z.string().min(1, "Description is required"),

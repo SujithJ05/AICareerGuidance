@@ -46,14 +46,14 @@ const Header = async () => {
                 <DropdownMenuItem asChild>
                   <Link href='/dashboard' className="flex items-center gap-2 w-full">
                     <LayoutTemplate className="h-4 w-4"/>
-                    dashboard
+                    Dashboard
                   </Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
                   <Link href='/resume' className="flex items-center gap-2 w-full">
                     <FileText className="h-4 w-4"/>
-                    Build Resume
+                    Resume Studio
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -62,12 +62,7 @@ const Header = async () => {
                     Interview Prep
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href='/ats-checker' className="flex items-center gap-2 w-full">
-                    <ScanSearch className="h-4 w-4"/>
-                    ATS Checker
-                  </Link>
-                </DropdownMenuItem>
+
                 
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Subscription</DropdownMenuItem>

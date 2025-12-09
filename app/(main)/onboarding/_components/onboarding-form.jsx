@@ -24,6 +24,22 @@ import {
   SelectValue,
   SelectGroup,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { ChevronsUpDown, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,7 +48,7 @@ import useFetch from "@/hooks/use-fetch";
 import { updateUser } from "@/actions/user";
 
 const OnboardingForm = ({ industries }) => {
-  const [selectedIndustry, setSelectedIndustry] = useState(null);
+
 
   const router = useRouter();
 
@@ -52,16 +68,21 @@ const OnboardingForm = ({ industries }) => {
     resolver: zodResolver(onboardingSchema),
   });
 
+  const selectedIndustryIds = watch("industry") || [];
+  const availableSubIndustries = Array.from(new Set(
+    selectedIndustryIds.flatMap(id => {
+      const industry = industries.find(i => i.id === id);
+      return industry ? industry.subIndustries : [];
+    })
+  ));
+
+
+
   const onSubmit = async (values) => {
     console.log(values);
     try {
-      const formattedIndustry = `${values.industry}-${values.subIndustry
-        .toLowerCase()
-        .replace(/  /g, "-")}`;
-
       await updateUserFn({
         ...values,
-        industry: formattedIndustry,
       });
     } catch (error) {
       console.log("onboarding error", error);
@@ -75,8 +96,6 @@ const OnboardingForm = ({ industries }) => {
       router.refresh();
     }
   }, [updateResult, updateLoading]);
-
-  const watchIndustry = watch("industry");
 
   return (
     <div className="flex items-center justify-center bg-background">
@@ -104,26 +123,77 @@ const OnboardingForm = ({ industries }) => {
 
             <div className="space-y-2 p-2">
               <Label htmlFor="industry">Industry</Label>
-              <Select
-                onValueChange={(value) => {
-                  setValue("industry", value);
-                  setSelectedIndustry(
-                    industries.find((industry) => industry.id === value)
-                  );
-                  setValue("subIndustry", "");
-                }}
-              >
-                <SelectTrigger className="w-full" id="industry">
-                  <SelectValue className="m-2" placeholder="Select industry" />
-                </SelectTrigger>
-                <SelectContent>
-                  {industries.map((industry) => (
-                    <SelectItem value={industry.id} key={industry.id}>
-                      {industry.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between"
+                  >
+                    <div className="flex flex-wrap gap-1">
+                      {watch("industry")?.length > 0 ? (
+                        watch("industry").map((indId) => {
+                          const ind = industries.find((i) => i.id === indId);
+                          return ind ? (
+                            <Badge key={ind.id} variant="secondary">
+                              {ind.name}
+                              <X
+                                className="ml-1 h-3 w-3 cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const newIndustries = watch("industry").filter(
+                                    (id) => id !== ind.id
+                                  );
+                                  setValue("industry", newIndustries);
+                                  setValue("subIndustry", []); // Clear subIndustries if main industry is removed
+                                }}
+                              />
+                            </Badge>
+                          ) : null;
+                        })
+                      ) : (
+                        "Select industry(s)"
+                      )}
+                    </div>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                  <Command>
+                    <CommandInput placeholder="Search industry..." />
+                    <CommandEmpty>No industry found.</CommandEmpty>
+                    <CommandGroup>
+                      {industries.map((industry) => (
+                        <CommandItem
+                          key={industry.id}
+                          onSelect={() => {
+                            const currentSelection = watch("industry") || [];
+                            const newSelection = currentSelection.includes(industry.id)
+                              ? currentSelection.filter((id) => id !== industry.id)
+                              : [...currentSelection, industry.id];
+                            setValue("industry", newSelection);
+                            setValue("subIndustry", []); // Clear subIndustries on industry change
+                          }}
+                        >
+                          <Checkbox
+                            checked={watch("industry")?.includes(industry.id)}
+                            onCheckedChange={(checked) => {
+                              const currentSelection = watch("industry") || [];
+                              const newSelection = checked
+                                ? [...currentSelection, industry.id]
+                                : currentSelection.filter((id) => id !== industry.id);
+                              setValue("industry", newSelection);
+                              setValue("subIndustry", []); // Clear subIndustries on industry change
+                            }}
+                            className="mr-2"
+                          />
+                          {industry.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               {errors.industry && (
                 <p className="text-sm text-red-500">
                   {errors.industry.message}
@@ -131,23 +201,75 @@ const OnboardingForm = ({ industries }) => {
               )}
             </div>
 
-            {watchIndustry && (
-              <div className="space-y-2 ">
+            {watch("industry")?.length > 0 && (
+              <div className="space-y-2 p-2">
                 <Label htmlFor="subIndustry">Specialization</Label>
-                <Select
-                  onValueChange={(value) => setValue("subIndustry", value)}
-                >
-                  <SelectTrigger className='w-full' id="subIndustry">
-                    <SelectValue className='m-2'placeholder="Select your specialization" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedIndustry?.subIndustries.map((sub) => (
-                      <SelectItem key={sub} value={sub}>
-                        {sub}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between"
+                      disabled={availableSubIndustries.length === 0}
+                    >
+                      <div className="flex flex-wrap gap-1">
+                        {watch("subIndustry")?.length > 0 ? (
+                          watch("subIndustry").map((sub) => (
+                            <Badge key={sub} variant="secondary">
+                              {sub}
+                              <X
+                                className="ml-1 h-3 w-3 cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const newSubIndustries = watch("subIndustry").filter(
+                                    (s) => s !== sub
+                                  );
+                                  setValue("subIndustry", newSubIndustries);
+                                }}
+                              />
+                            </Badge>
+                          ))
+                        ) : (
+                          "Select specialization(s)"
+                        )}
+                      </div>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                    <Command>
+                      <CommandInput placeholder="Search specialization..." />
+                      <CommandEmpty>No specialization found.</CommandEmpty>
+                      <CommandGroup>
+                        {availableSubIndustries.map((sub) => (
+                          <CommandItem
+                            key={sub}
+                            onSelect={() => {
+                              const currentSelection = watch("subIndustry") || [];
+                              const newSelection = currentSelection.includes(sub)
+                                ? currentSelection.filter((s) => s !== sub)
+                                : [...currentSelection, sub];
+                              setValue("subIndustry", newSelection);
+                            }}
+                          >
+                            <Checkbox
+                              checked={watch("subIndustry")?.includes(sub)}
+                              onCheckedChange={(checked) => {
+                                const currentSelection = watch("subIndustry") || [];
+                                const newSelection = checked
+                                  ? [...currentSelection, sub]
+                                  : currentSelection.filter((s) => s !== sub);
+                                setValue("subIndustry", newSelection);
+                              }}
+                              className="mr-2"
+                            />
+                            {sub}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 {errors.subIndustry && (
                   <p className="text-sm text-red-500">
                     {errors.subIndustry.message}
