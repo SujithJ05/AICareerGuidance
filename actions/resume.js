@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 import Anthropic from "@anthropic-ai/sdk";
 
 const anthropic = new Anthropic({

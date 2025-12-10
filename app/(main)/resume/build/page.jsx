@@ -1,14 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import {
-  Download,
-  Save,
-  Edit,
-  Loader2,
-  Monitor,
-  AlertTriangle,
-  lo,
-} from "lucide-react";
+import { Download, Save, Loader2, ArrowLeft, FileCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import React, { useState } from "react";
@@ -16,7 +8,6 @@ import { Controller, useForm } from "react-hook-form";
 import useFetch from "@/hooks/use-fetch";
 import { saveResume } from "@/actions/resume";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { resumeSchema } from "@/app/lib/schema";
 import { useEffect } from "react";
@@ -27,6 +18,17 @@ import { EntryForm } from "../_components/entry-form.jsx";
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { useUser } from "@clerk/nextjs";
 import MDEditor from "@uiw/react-md-editor";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import {
   pdf,
@@ -35,17 +37,17 @@ import {
   Text,
   View,
   StyleSheet,
-  Link,
+  Link as PdfLink,
 } from "@react-pdf/renderer";
-//import dynamic from "next/dynamic";
-//const html2pdf = dynamic(() => import("html2pdf.js"), { ssr: false });
-
-import { AtsChecker } from "../_components/ats-checker.jsx";
 
 const ResumeBuilderPage = ({ initialContent }) => {
   const [previewContent, setPreviewContent] = useState(initialContent);
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSavingForAts, setIsSavingForAts] = useState(false);
+  const [emptyResumeDialogOpen, setEmptyResumeDialogOpen] = useState(false);
+  const [emptyResumeMessage, setEmptyResumeMessage] = useState("");
+  const router = useRouter();
   const { user } = useUser();
   const {
     control,
@@ -57,7 +59,7 @@ const ResumeBuilderPage = ({ initialContent }) => {
     resolver: zodResolver(resumeSchema),
     defaultValues: {
       contactInfo: {
-        name: user?.fullName || "",
+        name: "",
       },
       summary: "",
       skills: "",
@@ -123,10 +125,31 @@ ${parts.join(" | ")}
     }
   }, [saveResult, saveError, isSaving]);
 
+  // Check if resume has any meaningful content
+  const isResumeEmpty = () => {
+    const { contactInfo, summary, skills, experience, education, projects } = formValues;
+    const hasContactInfo = contactInfo?.name || contactInfo?.email || contactInfo?.mobile || contactInfo?.linkedin || contactInfo?.github;
+    const hasSummary = summary?.trim();
+    const hasSkills = skills?.trim();
+    const hasExperience = experience?.length > 0;
+    const hasEducation = education?.length > 0;
+    const hasProjects = projects?.length > 0;
+    
+    return !hasContactInfo && !hasSummary && !hasSkills && !hasExperience && !hasEducation && !hasProjects;
+  };
+
   const onSubmit = async (data) => {
+    if (isResumeEmpty()) {
+      setEmptyResumeMessage("Please add some content to your resume before saving.");
+      setEmptyResumeDialogOpen(true);
+      return;
+    }
     try {
       const resumeContent = JSON.stringify(data);
-      await saveResumeFn({ title: data.contactInfo.name, content: resumeContent });
+      await saveResumeFn({
+        title: data.contactInfo.name || "Untitled",
+        content: resumeContent,
+      });
     } catch (error) {
       console.error("Save error:", error);
     }
@@ -134,9 +157,53 @@ ${parts.join(" | ")}
 
   // register font once at top
 
+  // Save resume and navigate to ATS checker
+  const handleCheckAtsScore = async () => {
+    if (isResumeEmpty()) {
+      setEmptyResumeMessage("Please add some content to your resume before checking ATS score.");
+      setEmptyResumeDialogOpen(true);
+      return;
+    }
+    setIsSavingForAts(true);
+    try {
+      const data = formValues;
+      const resumeContent = JSON.stringify(data);
+      const result = await saveResume({
+        title: data.contactInfo?.name || "Untitled",
+        content: resumeContent,
+      });
+
+      if (result?.id) {
+        toast.success("Resume saved! Redirecting to ATS Checker...");
+        router.push(`/resume/ats?resumeId=${result.id}`);
+      } else {
+        toast.error("Failed to save resume");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error("Failed to save resume");
+    } finally {
+      setIsSavingForAts(false);
+    }
+  };
+
   const generatePDF = async () => {
+    if (isResumeEmpty()) {
+      setEmptyResumeMessage("Please add some content to your resume before downloading.");
+      setEmptyResumeDialogOpen(true);
+      return;
+    }
     setIsGenerating(true);
     try {
+      // First save the resume
+      const data = formValues;
+      const resumeContent = JSON.stringify(data);
+      await saveResume({
+        title: data.contactInfo?.name || "Untitled",
+        content: resumeContent,
+      });
+      toast.success("Resume saved!");
+
       const styles = StyleSheet.create({
         page: {
           padding: 30,
@@ -159,8 +226,6 @@ ${parts.join(" | ")}
         itemDate: { fontSize: 9, color: "gray", marginBottom: 2 },
         itemDesc: { fontSize: 10 },
       });
-
-      const data = formValues;
 
       const doc = (
         <Document>
@@ -185,13 +250,14 @@ ${parts.join(" | ")}
                 {data.contactInfo?.linkedin && (
                   <Text>
                     {" "}
-                    | <Link src={data.contactInfo.linkedin}>LinkedIn</Link>
+                    |{" "}
+                    <PdfLink src={data.contactInfo.linkedin}>LinkedIn</PdfLink>
                   </Text>
                 )}
                 {data.contactInfo?.github && (
                   <Text>
                     {" "}
-                    | <Link src={data.contactInfo.github}>GitHub</Link>
+                    | <PdfLink src={data.contactInfo.github}>GitHub</PdfLink>
                   </Text>
                 )}
               </View>
@@ -280,7 +346,15 @@ ${parts.join(" | ")}
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-20">
+      {/* Back Button */}
+      <Link
+        href="/resume"
+        className="inline-flex items-center gap-2 text-gray-500 hover:text-black transition"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span>Back to Resume Studio</span>
+      </Link>
       <div className="flex flex-col md:flex-row justify-between items-center gap-2">
         <h1 className="text-6xl font-bold gradient-title">Resume Builder</h1>
 
@@ -313,6 +387,24 @@ ${parts.join(" | ")}
               <>
                 <Download className="h-4 w-4" />
                 Download PDF
+              </>
+            )}
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={handleCheckAtsScore}
+            disabled={isSavingForAts}
+          >
+            {isSavingForAts ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <FileCheck className="h-4 w-4" />
+                Check ATS Score
               </>
             )}
           </Button>
@@ -375,7 +467,7 @@ ${parts.join(" | ")}
                   <Input
                     {...register("contactInfo.linkedin")}
                     type="url"
-                    placeholder="hrpps://linkedin.com/in/username"
+                    placeholder="https://linkedin.com/in/username"
                     error={errors.contactInfo?.linkedin}
                   />
                   {errors.contactInfo?.linkedin && (
@@ -523,14 +615,22 @@ ${parts.join(" | ")}
         </div>
       </div>
 
-      <Tabs defaultValue="ats">
-        <TabsList>
-          <TabsTrigger value="ats">ATS</TabsTrigger>
-        </TabsList>
-        <TabsContent value="ats">
-          <AtsChecker content={previewContent} />
-        </TabsContent>
-      </Tabs>
+      {/* Empty Resume Dialog */}
+      <AlertDialog open={emptyResumeDialogOpen} onOpenChange={setEmptyResumeDialogOpen}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-black">Resume is Empty</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-500">
+              {emptyResumeMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction className="bg-black text-white hover:bg-gray-800">
+              Got it
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

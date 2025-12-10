@@ -420,7 +420,7 @@ const ResumeBuilder = ({ initialContent }) => {
                   <Input
                     {...register("contactInfo.linkedin")}
                     type="url"
-                    placeholder="hrpps://linkedin.com/in/username"
+                    placeholder="https://linkedin.com/in/username"
                     error={errors.contactInfo?.linkedin}
                   />
                   {errors.contactInfo?.linkedin && (
@@ -553,19 +553,20 @@ const ResumeBuilder = ({ initialContent }) => {
           </form>
         </div>
         {/* Preview Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Live Preview</h3>
-                    <div className="border rounded-lg h-full p-4 overflow-auto">
-                      <MDEditor.Markdown
-                        source={previewContent}
-                        style={{
-                          background: "white",
-                          color: "black",
-                          minHeight: "100%",
-                        }}
-                      />
-                    </div>
-                  </div>      </div>
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Live Preview</h3>
+          <div className="border rounded-lg h-full p-4 overflow-auto">
+            <MDEditor.Markdown
+              source={previewContent}
+              style={{
+                background: "white",
+                color: "black",
+                minHeight: "100%",
+              }}
+            />
+          </div>
+        </div>{" "}
+      </div>
 
       <Tabs defaultValue="ats">
         <TabsList>

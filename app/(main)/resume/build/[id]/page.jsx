@@ -7,7 +7,7 @@ import {
   Loader2,
   Monitor,
   AlertTriangle,
-  lo,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,7 +26,8 @@ import { EntryForm } from "../../_components/entry-form.jsx";
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { useUser } from "@clerk/nextjs";
 import MDEditor from "@uiw/react-md-editor";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 
 import {
   pdf,
@@ -35,7 +36,7 @@ import {
   Text,
   View,
   StyleSheet,
-  Link,
+  Link as PdfLink,
 } from "@react-pdf/renderer";
 //import dynamic from "next/dynamic";
 //const html2pdf = dynamic(() => import("html2pdf.js"), { ssr: false });
@@ -99,7 +100,8 @@ const EditResumePage = () => {
     if (contactInfo.mobile) parts.push(`📱 ${contactInfo.mobile}`);
     if (contactInfo.linkedin)
       parts.push(`💼 [LinkedIn](${contactInfo.linkedin})`);
-    if (contactInfo.github) parts.push(`💻 [GitHub](${contactInfo.github})
+    if (contactInfo.github)
+      parts.push(`💻 [GitHub](${contactInfo.github})
 `);
 
     return parts.length > 0
@@ -139,7 +141,11 @@ ${parts.join(" | ")}
   const onSubmit = async (data) => {
     try {
       const resumeContent = JSON.stringify(data);
-      await saveResumeFn({ title: data.contactInfo.name, content: resumeContent, resumeId });
+      await saveResumeFn({
+        title: data.contactInfo.name,
+        content: resumeContent,
+        resumeId,
+      });
     } catch (error) {
       console.error("Save error:", error);
     }
@@ -151,7 +157,12 @@ ${parts.join(" | ")}
     setIsGenerating(true);
     try {
       const styles = StyleSheet.create({
-        page: { padding: 30, fontSize: 11, lineHeight: 1.5, fontFamily: "Helvetica" },
+        page: {
+          padding: 30,
+          fontSize: 11,
+          lineHeight: 1.5,
+          fontFamily: "Helvetica",
+        },
         header: { textAlign: "center", marginBottom: 15 },
         name: { fontSize: 20, fontWeight: "bold", marginBottom: 4 },
         contact: { fontSize: 10, color: "#444" },
@@ -184,16 +195,23 @@ ${parts.join(" | ")}
                   flexWrap: "wrap",
                 }}
               >
-                {data.contactInfo?.email && <Text>{data.contactInfo.email}</Text>}
-                {data.contactInfo?.mobile && <Text> | {data.contactInfo.mobile}</Text>}
+                {data.contactInfo?.email && (
+                  <Text>{data.contactInfo.email}</Text>
+                )}
+                {data.contactInfo?.mobile && (
+                  <Text> | {data.contactInfo.mobile}</Text>
+                )}
                 {data.contactInfo?.linkedin && (
                   <Text>
-                    {" "} | <Link src={data.contactInfo.linkedin}>LinkedIn</Link>
+                    {" "}
+                    |{" "}
+                    <PdfLink src={data.contactInfo.linkedin}>LinkedIn</PdfLink>
                   </Text>
                 )}
                 {data.contactInfo?.github && (
                   <Text>
-                    {" "} | <Link src={data.contactInfo.github}>GitHub</Link>
+                    {" "}
+                    | <PdfLink src={data.contactInfo.github}>GitHub</PdfLink>
                   </Text>
                 )}
               </View>
@@ -283,6 +301,14 @@ ${parts.join(" | ")}
 
   return (
     <div className="space-y-4">
+      {/* Back Button */}
+      <Link
+        href="/resume"
+        className="inline-flex items-center gap-2 text-gray-500 hover:text-black transition"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span>Back to Resume Studio</span>
+      </Link>
       <div className="flex flex-col md:flex-row justify-between items-center gap-2">
         <h1 className="text-6xl font-bold gradient-title">Edit Resume</h1>
 
@@ -376,7 +402,7 @@ ${parts.join(" | ")}
                   <Input
                     {...register("contactInfo.linkedin")}
                     type="url"
-                    placeholder="hrpps://linkedin.com/in/username"
+                    placeholder="https://linkedin.com/in/username"
                     error={errors.contactInfo?.linkedin}
                   />
                   {errors.contactInfo?.linkedin && (
@@ -523,3 +549,8 @@ ${parts.join(" | ")}
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+export default EditResumePage;
