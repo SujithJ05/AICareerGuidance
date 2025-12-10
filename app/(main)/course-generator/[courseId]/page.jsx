@@ -257,7 +257,7 @@ export default function CourseViewPage({ params }) {
           className="flex items-center gap-2 text-gray-500 hover:text-black"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back to Course Generator</span>
+          <span>Back to Course Prep</span>
         </button>
         <h1 className="text-xl font-bold text-black">{courseData.title}</h1>
         <div className="w-32"></div> {/* Spacer for centering */}

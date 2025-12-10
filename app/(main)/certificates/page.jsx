@@ -147,7 +147,7 @@ export default function CertificatesPage() {
           <div className="flex items-center gap-3 mb-2">
             <Award className="w-8 h-8 text-yellow-500" />
             <h1 className="text-3xl font-bold text-black">
-              Awards & Certificates
+              Streak & Certifications
             </h1>
           </div>
           <p className="text-gray-600">

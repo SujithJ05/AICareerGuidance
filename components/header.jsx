@@ -92,7 +92,7 @@ const Header = async () => {
                     className="flex items-center gap-2 w-full"
                   >
                     <ScanSearch className="h-4 w-4" />
-                    Course Generator
+                    Course Prep
                   </Link>
                 </DropdownMenuItem>
 
@@ -102,7 +102,7 @@ const Header = async () => {
                     className="flex items-center gap-2 w-full"
                   >
                     <Award className="h-4 w-4" />
-                    Awards & Certificates
+                    Streak & Certifications
                   </Link>
                 </DropdownMenuItem>
 
