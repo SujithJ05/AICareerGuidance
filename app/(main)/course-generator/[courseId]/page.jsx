@@ -254,7 +254,7 @@ export default function CourseViewPage({ params }) {
                     )}
                   </div>
                   <span
-                    className={`flex items-center justify-center min-w-[28px] h-7 rounded-full font-bold text-sm ${
+                    className={`flex items-center justify-center min-w-7 h-7 rounded-full font-bold text-sm ${
                       selected === idx ? "bg-white text-black" : "bg-gray-700"
                     }`}
                   >

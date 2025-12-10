@@ -345,7 +345,7 @@ const ResumeDashboardPage = () => {
                     {/* Delete Button */}
                     <button
                       onClick={() => handleDeleteClick(resume)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition flex-shrink-0"
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition shrink-0"
                       title="Delete resume"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -431,7 +431,7 @@ const ResumeDashboardPage = () => {
               maxHeight: "90vh",
             }}
           >
-            <DialogHeader className="flex-shrink-0 px-6 py-4 border-b">
+            <DialogHeader className="shrink-0 px-6 py-4 border-b">
               <DialogTitle className="text-black text-xl">
                 {previewResume?.title || "Resume Preview"}
               </DialogTitle>
@@ -451,7 +451,7 @@ const ResumeDashboardPage = () => {
                 )}
               </div>
             </div>
-            <div className="flex-shrink-0 flex gap-3 px-6 py-4 border-t bg-white">
+            <div className="shrink-0 flex gap-3 px-6 py-4 border-t bg-white">
               <Button
                 asChild
                 className="flex-1 bg-black text-white hover:bg-gray-800 h-10"

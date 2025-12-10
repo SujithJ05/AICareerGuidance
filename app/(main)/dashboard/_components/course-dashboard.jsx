@@ -78,7 +78,7 @@ export default function CourseDashboard() {
               className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all border border-gray-200 overflow-hidden group"
             >
               {/* Header with gradient */}
-              <div className="bg-gradient-to-br from-violet-600 to-purple-700 p-6 text-white">
+              <div className="bg-linear-to-br from-violet-600 to-purple-700 p-6 text-white">
                 <h3 className="text-xl font-bold mb-2 line-clamp-2 group-hover:scale-105 transition-transform">
                   {course.title}
                 </h3>
