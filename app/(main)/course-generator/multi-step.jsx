@@ -401,23 +401,42 @@ export default function MultiStepCourseGenerator() {
     setProgress(0);
     setCurrentPhase("Initializing AI...");
 
-    // Simulated progress updates
-    const progressSteps = [
-      { progress: 10, phase: "Analyzing your requirements...", delay: 500 },
-      { progress: 25, phase: "Understanding the topic...", delay: 1500 },
-      { progress: 40, phase: "Generating course structure...", delay: 2500 },
-      { progress: 55, phase: "Creating chapter outlines...", delay: 4000 },
-      { progress: 70, phase: "Adding learning objectives...", delay: 5500 },
-      { progress: 85, phase: "Structuring content...", delay: 7000 },
+    // Smooth progress animation that continuously moves toward 85%
+    // Uses asymptotic approach - always moving but never reaching until API completes
+    const maxProgressBeforeComplete = 85;
+    const startTime = Date.now();
+
+    const phases = [
+      { threshold: 10, text: "Analyzing your requirements..." },
+      { threshold: 25, text: "Understanding the topic..." },
+      { threshold: 40, text: "Generating course structure..." },
+      { threshold: 55, text: "Creating chapter outlines..." },
+      { threshold: 70, text: "Adding learning objectives..." },
+      { threshold: 80, text: "Structuring content..." },
     ];
 
-    // Start progress simulation
-    const progressTimers = progressSteps.map(({ progress: p, phase, delay }) =>
-      setTimeout(() => {
-        setProgress(p);
-        setCurrentPhase(phase);
-      }, delay)
-    );
+    // Continuous progress updater - asymptotic approach to 85%
+    // Progress = 85 * (1 - e^(-t/30000)) where t is elapsed time in ms
+    // This means: ~63% of max at 30s, ~86% of max at 60s, ~95% of max at 90s
+    // But it NEVER reaches 85% - always leaves room to grow
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      // Asymptotic formula: approaches 85 but never reaches it
+      // Adjusts speed based on elapsed time - faster courses = faster progress feeling
+      const timeConstant = 40000; // Controls how fast progress moves (40 seconds to reach ~63% of max)
+      const asymptoteProgress =
+        maxProgressBeforeComplete * (1 - Math.exp(-elapsed / timeConstant));
+
+      setProgress(asymptoteProgress);
+
+      // Update phase based on progress
+      for (let i = phases.length - 1; i >= 0; i--) {
+        if (asymptoteProgress >= phases[i].threshold) {
+          setCurrentPhase(phases[i].text);
+          break;
+        }
+      }
+    }, 50); // Update every 50ms for extra smooth animation
 
     try {
       const res = await fetch("/api/course-generator", {
@@ -426,20 +445,29 @@ export default function MultiStepCourseGenerator() {
         body: JSON.stringify(form),
       });
 
-      // Clear progress timers
-      progressTimers.forEach(clearTimeout);
+      // Clear progress interval immediately when API returns
+      clearInterval(progressInterval);
 
       if (!res.ok) throw new Error("Failed to generate course layout");
 
-      setProgress(90);
-      setCurrentPhase("Saving your course...");
+      // Smooth transition from wherever we were to 88%
+      setProgress(88);
+      setCurrentPhase("Processing response...");
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       const data = await res.json();
+
+      setProgress(90);
+      setCurrentPhase("Saving your course...");
 
       // Save course via API (with fallbacks and numeric chapters)
       const courseInfo = data.courseInfo || {};
       const chaptersCount =
         parseInt(courseInfo.chapters || form.chapters || 0, 10) || 0;
+
+      setProgress(93);
+      setCurrentPhase("Finalizing details...");
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       setProgress(95);
       setCurrentPhase("Almost there...");
@@ -455,6 +483,7 @@ export default function MultiStepCourseGenerator() {
           duration: courseInfo.duration || form.duration || "",
           chapters: chaptersCount,
           roadmap: data.roadmap || "",
+          rating: data.rating || null,
           progress: Array(Math.max(1, chaptersCount || 0)).fill(false),
           sectionProgress: [],
         }),
@@ -479,8 +508,8 @@ export default function MultiStepCourseGenerator() {
       // Navigate to course view page
       router.push(`/course-generator/${created.id}`);
     } catch (err) {
-      // Clear progress timers on error
-      progressTimers.forEach(clearTimeout);
+      // Clear progress interval on error
+      clearInterval(progressInterval);
       setError(err.message || "Unknown error");
       setLoading(false);
       setProgress(0);

@@ -48,21 +48,27 @@ export async function PATCH(req, { params }) {
     duration,
     chapters,
     roadmap,
+    rating,
   } = body;
+
+  // Build update data object with only defined fields
+  const updateData = {};
+  if (progress !== undefined) updateData.progress = progress;
+  if (sectionProgress !== undefined)
+    updateData.sectionProgress = sectionProgress;
+  if (title !== undefined) updateData.title = title;
+  if (description !== undefined) updateData.description = description;
+  if (category !== undefined) updateData.category = category;
+  if (difficulty !== undefined) updateData.difficulty = difficulty;
+  if (duration !== undefined) updateData.duration = duration;
+  if (chapters !== undefined) updateData.chapters = chapters;
+  if (roadmap !== undefined) updateData.roadmap = roadmap;
+  if (rating !== undefined)
+    updateData.rating = rating ? parseFloat(rating) : null;
 
   const course = await db.course.updateMany({
     where: { id, userId: user.id },
-    data: {
-      progress,
-      sectionProgress,
-      title,
-      description,
-      category,
-      difficulty,
-      duration,
-      chapters,
-      roadmap,
-    },
+    data: updateData,
   });
 
   if (course.count === 0)

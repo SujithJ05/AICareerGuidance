@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   LayoutTemplate,
   ScanSearch,
+  Award,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -25,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { checkUser } from "@/lib/checkUser";
+import StreakDisplay from "./StreakDisplay";
 
 const Header = async () => {
   await checkUser();
@@ -94,10 +96,22 @@ const Header = async () => {
                   </Link>
                 </DropdownMenuItem>
 
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/certificates"
+                    className="flex items-center gap-2 w-full"
+                  >
+                    <Award className="h-4 w-4" />
+                    Awards & Certificates
+                  </Link>
+                </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Subscription</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <StreakDisplay />
 
             <UserButton />
           </SignedIn>

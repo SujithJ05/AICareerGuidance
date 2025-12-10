@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, use } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   Clock,
@@ -8,6 +8,9 @@ import {
   Square,
   ChevronDown,
   ChevronRight,
+  Star,
+  Loader2,
+  Award,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -91,12 +94,14 @@ function splitMarkdownByChapters(markdown) {
 }
 
 export default function CourseViewPage({ params }) {
+  const { courseId } = use(params);
   const router = useRouter();
   const [courseData, setCourseData] = useState(null);
   const [selected, setSelected] = useState(0);
   const [selectedSection, setSelectedSection] = useState(0);
   const [progress, setProgress] = useState([]);
   const [sectionProgress, setSectionProgress] = useState([]);
+  const [isGeneratingCertificate, setIsGeneratingCertificate] = useState(false);
   const [sectionAnchor, setSectionAnchor] = useState("");
   const [expanded, setExpanded] = useState({});
 
@@ -115,10 +120,22 @@ export default function CourseViewPage({ params }) {
     }
   }, [sectionAnchor]);
 
+  // Update streak when user visits a course
+  useEffect(() => {
+    const updateStreak = async () => {
+      try {
+        await fetch("/api/streak", { method: "POST" });
+      } catch (error) {
+        console.error("Failed to update streak:", error);
+      }
+    };
+    updateStreak();
+  }, []);
+
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`/api/courses/${params.courseId}`);
+        const res = await fetch(`/api/courses/${courseId}`);
         if (!res.ok) throw new Error("Failed to load course");
         const course = await res.json();
         setCourseData(course);
@@ -146,19 +163,51 @@ export default function CourseViewPage({ params }) {
       }
     };
     load();
-  }, [params.courseId]);
+  }, [courseId]);
 
   const chapters = useMemo(
     () => (courseData ? splitMarkdownByChapters(courseData.roadmap) : []),
     [courseData]
   );
 
+  // Check if course is 100% complete
+  const isCourseComplete = useMemo(() => {
+    if (!sectionProgress.length) return false;
+    return sectionProgress.every(
+      (chapter) =>
+        Array.isArray(chapter) && chapter.length > 0 && chapter.every(Boolean)
+    );
+  }, [sectionProgress]);
+
+  const generateCertificate = async () => {
+    setIsGeneratingCertificate(true);
+    try {
+      const res = await fetch("/api/certificates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to generate certificate");
+      }
+      const certificate = await res.json();
+      // Navigate to the certificate page
+      router.push(`/certificates/${certificate.id}`);
+    } catch (err) {
+      console.error("Certificate generation error:", err);
+      alert(err.message);
+    } finally {
+      setIsGeneratingCertificate(false);
+    }
+  };
+
   const updateSectionProgress = (next) => {
     const nextProgress = deriveChapterProgress(next, chapters);
     setSectionProgress(next);
     setProgress(nextProgress);
     // persist to API (fire and forget)
-    fetch(`/api/courses/${params.courseId}`, {
+    fetch(`/api/courses/${courseId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sectionProgress: next, progress: nextProgress }),
@@ -221,7 +270,7 @@ export default function CourseViewPage({ params }) {
           <div className="p-6 border-b border-gray-700">
             <h2 className="text-2xl font-bold mb-2">{courseData.title}</h2>
             <p className="text-gray-300 text-sm">{courseData.description}</p>
-            <div className="mt-4 flex items-center gap-4 text-sm">
+            <div className="mt-4 flex items-center gap-4 text-sm flex-wrap">
               <span className="bg-gray-700 px-3 py-1 rounded">
                 {courseData.difficulty}
               </span>
@@ -229,20 +278,50 @@ export default function CourseViewPage({ params }) {
                 <Clock className="w-4 h-4" />
                 {courseData.duration}
               </span>
+              {courseData.rating && (
+                <span className="flex items-center gap-1 bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded">
+                  <Star className="w-4 h-4 fill-yellow-400" />
+                  {courseData.rating.toFixed(1)}
+                </span>
+              )}
             </div>
+            {/* Get Certificate Button - Only visible when course is 100% complete */}
+            {isCourseComplete && (
+              <button
+                onClick={generateCertificate}
+                disabled={isGeneratingCertificate}
+                className="mt-4 w-full flex items-center justify-center gap-2 bg-linear-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-semibold px-4 py-3 rounded-lg transition disabled:opacity-50"
+              >
+                {isGeneratingCertificate ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Award className="w-5 h-5" />
+                )}
+                {isGeneratingCertificate ? "Generating..." : "Get Certificate"}
+              </button>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto">
             {chapters.map((ch, idx) => (
-              <button
+              <div
                 key={idx}
-                className={`w-full text-left px-6 py-4 border-b border-gray-700 transition-all ${
+                role="button"
+                tabIndex={0}
+                className={`w-full text-left px-6 py-4 border-b border-gray-700 transition-all cursor-pointer ${
                   selected === idx ? "bg-gray-700" : "hover:bg-gray-800"
                 }`}
                 onClick={() => {
                   setSelected(idx);
                   setSelectedSection(0);
                   setSectionAnchor("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setSelected(idx);
+                    setSelectedSection(0);
+                    setSectionAnchor("");
+                  }
                 }}
               >
                 <div className="flex items-start gap-3">
@@ -309,23 +388,31 @@ export default function CourseViewPage({ params }) {
                     )}
                   </div>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto bg-white p-8">
+        <div className="flex-1 overflow-y-auto bg-white p-8 pb-24">
           <div className="max-w-4xl mx-auto">
             <div className="prose prose-lg max-w-none">
               <ReactMarkdown
                 components={{
-                  code({ node, inline, className, children, ...props }) {
-                    return !inline ? (
+                  pre({ children }) {
+                    return (
                       <pre className="bg-black text-white rounded-lg p-6 overflow-x-auto my-6 font-mono text-sm">
-                        <code>{children}</code>
+                        {children}
                       </pre>
-                    ) : (
+                    );
+                  },
+                  code({ node, inline, className, children, ...props }) {
+                    // For block code, just return the code element (pre handles wrapper)
+                    if (!inline) {
+                      return <code>{children}</code>;
+                    }
+                    // For inline code
+                    return (
                       <code className="bg-gray-100 text-black px-2 py-1 rounded text-sm font-mono">
                         {children}
                       </code>

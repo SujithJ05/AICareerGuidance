@@ -45,6 +45,11 @@ model User {
   experience Int?       // Years of experience
   skills     String[]   // Array of skills
 
+  // Streak tracking
+  currentStreak   Int       @default(0)
+  longestStreak   Int       @default(0)
+  lastActiveDate  DateTime?
+
   assessments Assessment[]
   resumes     Resume[]
   coverLetter CoverLetter[]
@@ -128,11 +133,26 @@ model Course {
   difficulty      String
   duration        String
   chapters        Int
+  rating          Float?   // AI-evaluated course quality rating (1.0-5.0)
   roadmap         String   // markdown content
   progress        Json     @default("[]") // chapter-level booleans
   sectionProgress Json     @default("[]") // 2D booleans for sections
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  certificate     Certificate?
+
+  @@index([userId])
+}
+
+model Certificate {
+  id           String   @id @default(cuid())
+  courseId     String   @unique
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId       String
+  courseName   String   // Snapshot of course title at time of completion
+  userName     String   // Snapshot of user name at time of completion
+  issueDate    DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   @@index([userId])
 }

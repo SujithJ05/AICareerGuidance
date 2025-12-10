@@ -30,16 +30,19 @@ const Quiz = () => {
     data: quizData,
   } = useFetch(generateQuiz);
 
-    const {
+  const {
     loading: savingResult,
     fn: saveQuizResultFn,
     data: resultData,
     setData: setResultData,
   } = useFetch(saveQuizResult);
 
+  // Update streak when quiz is started
   useEffect(() => {
     if (quizData) {
       setAnswers(new Array(quizData.length).fill(null));
+      // Update streak when user starts a quiz
+      fetch("/api/streak", { method: "POST" }).catch(console.error);
     }
   }, [quizData]);
 
@@ -52,10 +55,10 @@ const Quiz = () => {
     if (currentQuestion < quizData.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setShowExplanation(false);
-    }else{
-      finishQuiz()
+    } else {
+      finishQuiz();
     }
-  }
+  };
 
   const calculateScore = () => {
     let correct = 0;
@@ -77,7 +80,7 @@ const Quiz = () => {
     }
   };
 
-   const startNewQuiz = () => {
+  const startNewQuiz = () => {
     setCurrentQuestion(0);
     setAnswers([]);
     setShowExplanation(false);
@@ -85,7 +88,7 @@ const Quiz = () => {
     setResultData(null);
   };
 
-    // Show results if quiz is completed
+  // Show results if quiz is completed
   if (resultData) {
     return (
       <div className="mx-2">
@@ -93,8 +96,6 @@ const Quiz = () => {
       </div>
     );
   }
-
-
 
   if (!quizData) {
     return (
@@ -167,17 +168,13 @@ const Quiz = () => {
           </Button>
         )}
 
-
-          <Button
-            onClick={handleNext}
-            className="ml-auto"
-            disabled={!answers[currentQuestion]}
-          >
-            {currentQuestion<quizData.length-1
-            ? "Next"
-            :"Submit"}
-          </Button>
-
+        <Button
+          onClick={handleNext}
+          className="ml-auto"
+          disabled={!answers[currentQuestion]}
+        >
+          {currentQuestion < quizData.length - 1 ? "Next" : "Submit"}
+        </Button>
       </CardFooter>
     </Card>
   );

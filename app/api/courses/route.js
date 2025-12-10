@@ -45,9 +45,29 @@ export async function POST(req) {
     duration,
     chapters,
     roadmap,
+    rating,
     progress = [],
     sectionProgress = [],
   } = body;
+
+  // Calculate fallback rating from content metrics if no rating provided
+  let finalRating = rating ? parseFloat(rating) : null;
+  if (!finalRating && roadmap) {
+    const chapterCount = (roadmap.match(/^## /gm) || []).length;
+    const codeBlockCount = Math.floor((roadmap.match(/```/g) || []).length / 2);
+    const wordCount = roadmap.split(/\s+/).length;
+
+    // Calculate metrics-based rating
+    finalRating = Math.min(
+      5.0,
+      2.5 +
+        (chapterCount >= chapters ? 0.5 : (chapterCount / chapters) * 0.5) +
+        (codeBlockCount >= 3 ? 0.5 : codeBlockCount * 0.15) +
+        (wordCount >= 1000 ? 0.5 : wordCount / 2000) +
+        (wordCount >= 2000 ? 0.3 : 0)
+    );
+    finalRating = Math.round(finalRating * 10) / 10;
+  }
 
   const course = await db.course.create({
     data: {
@@ -59,6 +79,7 @@ export async function POST(req) {
       duration,
       chapters,
       roadmap,
+      rating: finalRating,
       progress,
       sectionProgress,
     },
