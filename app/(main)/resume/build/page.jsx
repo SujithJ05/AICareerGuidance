@@ -125,23 +125,78 @@ ${parts.join(" | ")}
     }
   }, [saveResult, saveError, isSaving]);
 
-  // Check if resume has any meaningful content
-  const isResumeEmpty = () => {
-    const { contactInfo, summary, skills, experience, education, projects } = formValues;
-    const hasContactInfo = contactInfo?.name || contactInfo?.email || contactInfo?.mobile || contactInfo?.linkedin || contactInfo?.github;
-    const hasSummary = summary?.trim();
-    const hasSkills = skills?.trim();
-    const hasExperience = experience?.length > 0;
-    const hasEducation = education?.length > 0;
-    const hasProjects = projects?.length > 0;
-    
-    return !hasContactInfo && !hasSummary && !hasSkills && !hasExperience && !hasEducation && !hasProjects;
+  // Check which required fields are missing
+  const getMissingFields = () => {
+    const { contactInfo, summary, skills } = formValues;
+    const missing = [];
+
+    // Check Personal Information
+    if (!contactInfo?.name?.trim()) {
+      missing.push("Name");
+    }
+    if (!contactInfo?.email?.trim()) {
+      missing.push("Email");
+    }
+
+    // Check Professional Summary
+    if (!summary?.trim()) {
+      missing.push("Professional Summary");
+    }
+
+    // Check Skills
+    if (!skills?.trim()) {
+      missing.push("Skills");
+    }
+
+    return missing;
+  };
+
+  // Check if resume has required fields filled
+  const hasRequiredFields = () => {
+    const missing = getMissingFields();
+    return missing.length === 0;
+  };
+
+  // Show dialog with missing fields
+  const showMissingFieldsDialog = (action) => {
+    const missing = getMissingFields();
+    const missingList = missing.join(", ");
+
+    let actionText = "";
+    if (action === "save") {
+      actionText = "saving";
+    } else if (action === "download") {
+      actionText = "downloading";
+    } else if (action === "ats") {
+      actionText = "checking ATS score";
+    }
+
+    setEmptyResumeMessage(
+      `Please fill in the following required fields before ${actionText}: ${missingList}.`
+    );
+    setEmptyResumeDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!hasRequiredFields()) {
+      showMissingFieldsDialog("save");
+      return;
+    }
+    try {
+      const data = formValues;
+      const resumeContent = JSON.stringify(data);
+      await saveResumeFn({
+        title: data.contactInfo?.name || "Untitled",
+        content: resumeContent,
+      });
+    } catch (error) {
+      console.error("Save error:", error);
+    }
   };
 
   const onSubmit = async (data) => {
-    if (isResumeEmpty()) {
-      setEmptyResumeMessage("Please add some content to your resume before saving.");
-      setEmptyResumeDialogOpen(true);
+    if (!hasRequiredFields()) {
+      showMissingFieldsDialog("save");
       return;
     }
     try {
@@ -159,9 +214,8 @@ ${parts.join(" | ")}
 
   // Save resume and navigate to ATS checker
   const handleCheckAtsScore = async () => {
-    if (isResumeEmpty()) {
-      setEmptyResumeMessage("Please add some content to your resume before checking ATS score.");
-      setEmptyResumeDialogOpen(true);
+    if (!hasRequiredFields()) {
+      showMissingFieldsDialog("ats");
       return;
     }
     setIsSavingForAts(true);
@@ -188,9 +242,8 @@ ${parts.join(" | ")}
   };
 
   const generatePDF = async () => {
-    if (isResumeEmpty()) {
-      setEmptyResumeMessage("Please add some content to your resume before downloading.");
-      setEmptyResumeDialogOpen(true);
+    if (!hasRequiredFields()) {
+      showMissingFieldsDialog("download");
       return;
     }
     setIsGenerating(true);
@@ -359,11 +412,7 @@ ${parts.join(" | ")}
         <h1 className="text-6xl font-bold gradient-title">Resume Builder</h1>
 
         <div className="space-x-2">
-          <Button
-            typr="submit"
-            onClick={handleSubmit(onSubmit)} // ✅ This works directly
-            disabled={isSaving}
-          >
+          <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -616,10 +665,15 @@ ${parts.join(" | ")}
       </div>
 
       {/* Empty Resume Dialog */}
-      <AlertDialog open={emptyResumeDialogOpen} onOpenChange={setEmptyResumeDialogOpen}>
+      <AlertDialog
+        open={emptyResumeDialogOpen}
+        onOpenChange={setEmptyResumeDialogOpen}
+      >
         <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-black">Resume is Empty</AlertDialogTitle>
+            <AlertDialogTitle className="text-black">
+              Resume is Empty
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-gray-500">
               {emptyResumeMessage}
             </AlertDialogDescription>
