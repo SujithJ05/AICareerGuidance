@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
@@ -223,12 +224,9 @@ const ResumeDashboardPage = () => {
       </div>
 
       <div className="space-y-4">
-        <div>
-          <h2 className="text-2xl font-bold text-black">My Resumes</h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Manage, preview, and refine every version you've saved.
-          </p>
-        </div>
+        <p className="text-muted-foreground text-sm">
+          Manage, preview, and refine every version you've saved.
+        </p>
 
         {loading ? (
           <div className="text-center py-10 text-gray-500">Loading...</div>
@@ -255,141 +253,161 @@ const ResumeDashboardPage = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {resumes.map((resume) => (
-              <div
+            {resumes.map((resume, i) => (
+              <motion.div
                 key={resume.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                custom={i}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{
+                  opacity: 1,
+                  y: 0,
+                  transition: {
+                    delay: i * 0.08,
+                    type: "spring",
+                    stiffness: 80,
+                    damping: 15,
+                  },
+                }}
+                whileHover={{
+                  scale: 1.03,
+                  boxShadow: "0 8px 32px 0 rgba(80, 0, 200, 0.10)",
+                  transition: { type: "spring", stiffness: 200, damping: 12 },
+                }}
+                viewport={{ once: true, amount: 0.2 }}
+                className="h-full"
               >
-                {/* Resume Preview Card - Smaller */}
-                <div className="relative p-3 bg-gray-50">
-                  {/* Mini Resume Preview */}
-                  {(() => {
-                    const preview = getResumePreview(resume);
-                    return (
-                      <div className="bg-white rounded shadow-sm border border-gray-200 p-3 min-h-[140px] text-[9px] leading-relaxed overflow-hidden">
-                        {/* Header */}
-                        <div className="border-b border-gray-200 pb-1.5 mb-1.5">
-                          <h4 className="font-bold text-[11px] text-black truncate">
-                            {preview.name}
-                          </h4>
-                          <div className="text-[8px] text-gray-500 truncate">
-                            {preview.email}
-                            {preview.email && preview.phone ? " • " : ""}
-                            {preview.phone}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow h-full flex flex-col">
+                  {/* Resume Preview Card - Smaller */}
+                  <div className="relative p-3 bg-gray-50">
+                    {/* Mini Resume Preview */}
+                    {(() => {
+                      const preview = getResumePreview(resume);
+                      return (
+                        <div className="bg-white rounded shadow-sm border border-gray-200 p-3 min-h-[140px] h-[140px] flex flex-col justify-between text-[9px] leading-relaxed overflow-hidden">
+                          {/* Header */}
+                          <div className="border-b border-gray-200 pb-1.5 mb-1.5">
+                            <h4 className="font-bold text-[11px] text-black truncate">
+                              {preview.name}
+                            </h4>
+                            <div className="text-[8px] text-gray-500 truncate">
+                              {preview.email}
+                              {preview.email && preview.phone ? " • " : ""}
+                              {preview.phone}
+                            </div>
                           </div>
+
+                          {/* Summary */}
+                          {preview.summary && (
+                            <div className="mb-1.5">
+                              <div className="font-semibold text-[8px] text-gray-600 uppercase">
+                                Summary
+                              </div>
+                              <p className="text-gray-600 line-clamp-2">
+                                {preview.summary}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Skills */}
+                          {preview.skills && (
+                            <div className="mb-1.5">
+                              <div className="font-semibold text-[8px] text-gray-600 uppercase">
+                                Skills
+                              </div>
+                              <p className="text-gray-600 truncate">
+                                {preview.skills}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Experience */}
+                          {preview.experience && (
+                            <div className="mb-1">
+                              <div className="font-semibold text-[8px] text-gray-600 uppercase">
+                                Experience
+                              </div>
+                              <p className="text-gray-700 truncate">
+                                {preview.experience}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Education */}
+                          {preview.education && (
+                            <div>
+                              <div className="font-semibold text-[8px] text-gray-600 uppercase">
+                                Education
+                              </div>
+                              <p className="text-gray-700 truncate">
+                                {preview.education}
+                              </p>
+                            </div>
+                          )}
                         </div>
-
-                        {/* Summary */}
-                        {preview.summary && (
-                          <div className="mb-1.5">
-                            <div className="font-semibold text-[8px] text-gray-600 uppercase">
-                              Summary
-                            </div>
-                            <p className="text-gray-600 line-clamp-2">
-                              {preview.summary}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Skills */}
-                        {preview.skills && (
-                          <div className="mb-1.5">
-                            <div className="font-semibold text-[8px] text-gray-600 uppercase">
-                              Skills
-                            </div>
-                            <p className="text-gray-600 truncate">
-                              {preview.skills}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Experience */}
-                        {preview.experience && (
-                          <div className="mb-1">
-                            <div className="font-semibold text-[8px] text-gray-600 uppercase">
-                              Experience
-                            </div>
-                            <p className="text-gray-700 truncate">
-                              {preview.experience}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Education */}
-                        {preview.education && (
-                          <div>
-                            <div className="font-semibold text-[8px] text-gray-600 uppercase">
-                              Education
-                            </div>
-                            <p className="text-gray-700 truncate">
-                              {preview.education}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                {/* Card Footer - Compact */}
-                <div className="p-3 border-t border-gray-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-sm text-black truncate">
-                        {resume.title || "Untitled"}
-                      </h3>
-                      <p className="text-[10px] text-gray-500">
-                        Updated {formatDate(resume.updatedAt)}
-                      </p>
-                    </div>
-                    {/* Delete Button */}
-                    <button
-                      onClick={() => handleDeleteClick(resume)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition shrink-0"
-                      title="Delete resume"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                      );
+                    })()}
                   </div>
 
-                  {/* Action Buttons - Smaller */}
-                  <div className="flex gap-1.5 mb-2">
+                  {/* Card Footer - Compact */}
+                  <div className="p-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-sm text-black truncate">
+                          {resume.title || "Untitled"}
+                        </h3>
+                        <p className="text-[10px] text-gray-500">
+                          Updated {formatDate(resume.updatedAt)}
+                        </p>
+                      </div>
+                      {/* Delete Button */}
+                      <button
+                        onClick={() => handleDeleteClick(resume)}
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition shrink-0"
+                        title="Delete resume"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Action Buttons - Smaller */}
+                    <div className="flex gap-1.5 mb-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 h-7 text-xs border-gray-300 text-gray-700 hover:bg-gray-50 px-2"
+                        onClick={() => handlePreview(resume)}
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        View
+                      </Button>
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 h-7 text-xs border-gray-300 text-gray-700 hover:bg-gray-50 px-2"
+                      >
+                        <Link href={`/resume/build/${resume.id}`}>
+                          <Pencil className="w-3 h-3 mr-1" />
+                          Edit
+                        </Link>
+                      </Button>
+                    </div>
+
+                    {/* Download PDF Button */}
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      className="flex-1 h-7 text-xs border-gray-300 text-gray-700 hover:bg-gray-50 px-2"
-                      onClick={() => handlePreview(resume)}
-                    >
-                      <Eye className="w-3 h-3 mr-1" />
-                      View
-                    </Button>
-                    <Button
+                      className="w-full h-7 text-xs text-green-600 hover:text-green-700 hover:bg-green-50"
                       asChild
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 h-7 text-xs border-gray-300 text-gray-700 hover:bg-gray-50 px-2"
                     >
-                      <Link href={`/resume/build/${resume.id}`}>
-                        <Pencil className="w-3 h-3 mr-1" />
-                        Edit
+                      <Link href={`/resume/build/${resume.id}?download=true`}>
+                        <Download className="w-3 h-3 mr-1" />
+                        Download PDF
                       </Link>
                     </Button>
                   </div>
-
-                  {/* Download PDF Button */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full h-7 text-xs text-green-600 hover:text-green-700 hover:bg-green-50"
-                    asChild
-                  >
-                    <Link href={`/resume/build/${resume.id}?download=true`}>
-                      <Download className="w-3 h-3 mr-1" />
-                      Download PDF
-                    </Link>
-                  </Button>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}

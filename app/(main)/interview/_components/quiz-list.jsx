@@ -4,6 +4,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -44,33 +45,53 @@ export default function QuizList({ assessments }) {
         <CardContent>
           <div className="space-y-4">
             {assessments?.map((assessment, i) => (
-              <Card
+              <motion.div
                 key={assessment.id}
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
+                custom={i}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{
+                  opacity: 1,
+                  y: 0,
+                  transition: {
+                    delay: i * 0.08,
+                    type: "spring",
+                    stiffness: 80,
+                    damping: 15,
+                  },
+                }}
+                whileHover={{
+                  scale: 1.03,
+                  boxShadow: "0 8px 32px 0 rgba(80, 0, 200, 0.10)",
+                  transition: { type: "spring", stiffness: 200, damping: 12 },
+                }}
+                viewport={{ once: true, amount: 0.2 }}
+                className="h-full"
                 onClick={() => setSelectedQuiz(assessment)}
               >
-                <CardHeader>
-                  <CardTitle className="gradient-title text-2xl">
-                    Quiz {i + 1}
-                  </CardTitle>
-                  <CardDescription className="flex justify-between w-full">
-                    <div>Score: {assessment.quizScore.toFixed(1)}%</div>
-                    <div>
-                      {format(
-                        new Date(assessment.createdAt),
-                        "MMMM dd, yyyy HH:mm"
-                      )}
-                    </div>
-                  </CardDescription>
-                </CardHeader>
-                {assessment.improvementTip && (
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      {assessment.improvementTip}
-                    </p>
-                  </CardContent>
-                )}
-              </Card>
+                <Card className="cursor-pointer hover:bg-muted/50 transition-colors h-full">
+                  <CardHeader>
+                    <CardTitle className="gradient-title text-2xl">
+                      Quiz {i + 1}
+                    </CardTitle>
+                    <CardDescription className="flex justify-between w-full">
+                      <div>Score: {assessment.quizScore.toFixed(1)}%</div>
+                      <div>
+                        {format(
+                          new Date(assessment.createdAt),
+                          "MMMM dd, yyyy HH:mm"
+                        )}
+                      </div>
+                    </CardDescription>
+                  </CardHeader>
+                  {assessment.improvementTip && (
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        {assessment.improvementTip}
+                      </p>
+                    </CardContent>
+                  )}
+                </Card>
+              </motion.div>
             ))}
           </div>
         </CardContent>

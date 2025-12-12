@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Award,
@@ -133,14 +134,14 @@ export default function CertificatesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-gray-100 via-white to-gray-200 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-linear-to-br from-gray-100 via-white to-gray-200 flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-4xl mx-auto bg-white/90 rounded-2xl shadow-xl p-10 border border-gray-200">
         {/* Header */}
         <div className="mb-8">
@@ -203,7 +204,7 @@ export default function CertificatesPage() {
                   <div
                     className={`w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center ${
                       isEarned
-                        ? `bg-gradient-to-br ${badge.color}`
+                        ? `bg-linear-to-br ${badge.color}`
                         : "bg-gray-200"
                     }`}
                   >
@@ -227,7 +228,7 @@ export default function CertificatesPage() {
                     <div className="mt-2">
                       <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
                         <div
-                          className={`h-full bg-gradient-to-r ${badge.color}`}
+                          className={`h-full bg-linear-to-r ${badge.color}`}
                           style={{ width: `${progress}%` }}
                         />
                       </div>
@@ -268,7 +269,7 @@ export default function CertificatesPage() {
               </div>
               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className={`h-full bg-gradient-to-r ${nextBadge.color} transition-all`}
+                  className={`h-full bg-linear-to-r ${nextBadge.color} transition-all`}
                   style={{
                     width: `${Math.min(
                       100,
@@ -308,40 +309,62 @@ export default function CertificatesPage() {
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
-              {certificates.map((cert) => (
-                <Link
+              {certificates.map((cert, i) => (
+                <motion.div
                   key={cert.id}
-                  href={`/certificates/${cert.id}`}
-                  className="group block bg-linear-to-br from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-6 hover:shadow-lg hover:border-yellow-300 transition-all"
+                  custom={i}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{
+                    opacity: 1,
+                    y: 0,
+                    transition: {
+                      delay: i * 0.08,
+                      type: "spring",
+                      stiffness: 80,
+                      damping: 15,
+                    },
+                  }}
+                  whileHover={{
+                    scale: 1.03,
+                    boxShadow: "0 8px 32px 0 rgba(255, 200, 0, 0.10)",
+                    transition: { type: "spring", stiffness: 200, damping: 12 },
+                  }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  className="h-full"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-linear-to-br from-yellow-400 to-amber-500 rounded-lg">
-                      <Award className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg text-gray-900 group-hover:text-amber-700 transition truncate">
-                        {cert.courseName}
-                      </h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Awarded to {cert.userName}
-                      </p>
-                      <div className="flex items-center gap-2 mt-3 text-sm text-gray-500">
-                        <Calendar className="w-4 h-4" />
-                        <span>
-                          {new Date(cert.issueDate).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            }
-                          )}
-                        </span>
+                  <Link
+                    href={`/certificates/${cert.id}`}
+                    className="group block bg-linear-to-br from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-6 hover:shadow-lg hover:border-yellow-300 transition-all h-full"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-linear-to-br from-yellow-400 to-amber-500 rounded-lg">
+                        <Award className="w-6 h-6 text-white" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg text-gray-900 group-hover:text-amber-700 transition truncate">
+                          {cert.courseName}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Awarded to {cert.userName}
+                        </p>
+                        <div className="flex items-center gap-2 mt-3 text-sm text-gray-500">
+                          <Calendar className="w-4 h-4" />
+                          <span>
+                            {new Date(cert.issueDate).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-amber-600 group-hover:translate-x-1 transition-all" />
                     </div>
-                    <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-amber-600 group-hover:translate-x-1 transition-all" />
-                  </div>
-                </Link>
+                  </Link>
+                </motion.div>
               ))}
             </div>
           )}

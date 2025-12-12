@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
@@ -60,72 +61,95 @@ const DashboardView = ({ insights }) => {
     addSuffix: true,
   });
 
-  return <div className="space-y-6">
+  // Animation variants for cards
+  const cardVariants = {
+    hidden: { opacity: 0, y: 40 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.08,
+        type: "spring",
+        stiffness: 80,
+        damping: 15,
+      },
+    }),
+    hover: {
+      scale: 1.04,
+      boxShadow: "0 8px 32px 0 rgba(80, 0, 200, 0.10)",
+      transition: { type: "spring", stiffness: 200, damping: 12 },
+    },
+  };
 
-
-
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Market Outlook
-            </CardTitle>
-            <OutlookIcon className={`h-4 w-4 ${outlookColor}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{insights.marketOutlook}</div>
-           
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Industry Growth
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {insights.growthRate.toFixed(1)}%
-            </div>
-            
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Demand Level</CardTitle>
-            <BriefcaseIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{insights.demandLevel.toLowerCase()} </div>
-           
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Top Skills</CardTitle>
-            <Brain className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-1">
-              {insights.topSkills.map((skill) => (
-                <Badge key={skill} variant="secondary">
-                  {skill}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          {
+            title: "Market Outlook",
+            icon: <OutlookIcon className={`h-4 w-4 ${outlookColor}`} />,
+            content: (
+              <div className="text-2xl font-bold">{insights.marketOutlook}</div>
+            ),
+          },
+          {
+            title: "Industry Growth",
+            icon: <TrendingUp className="h-4 w-4 text-muted-foreground" />,
+            content: (
+              <div className="text-2xl font-bold">
+                {insights.growthRate.toFixed(1)}%
+              </div>
+            ),
+          },
+          {
+            title: "Demand Level",
+            icon: <BriefcaseIcon className="h-4 w-4 text-muted-foreground" />,
+            content: (
+              <div className="text-2xl font-bold">
+                {insights.demandLevel.toLowerCase()}{" "}
+              </div>
+            ),
+          },
+          {
+            title: "Top Skills",
+            icon: <Brain className="h-4 w-4 text-muted-foreground" />,
+            content: (
+              <div className="flex flex-wrap gap-1">
+                {insights.topSkills.map((skill) => (
+                  <Badge key={skill} variant="secondary">
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            ),
+          },
+        ].map((card, i) => (
+          <motion.div
+            key={card.title}
+            custom={i}
+            initial="hidden"
+            whileInView="visible"
+            whileHover="hover"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={cardVariants}
+            className="h-full"
+          >
+            <Card className="h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {card.title}
+                </CardTitle>
+                {card.icon}
+              </CardHeader>
+              <CardContent>{card.content}</CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
-
-
 
       {/* ------------trends--------------------------------------------------------------------------------------------------------------- */}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Key Industry Trends</CardTitle>
@@ -161,11 +185,8 @@ const DashboardView = ({ insights }) => {
           </CardContent>
         </Card>
       </div>
-
-
-
-
-  </div>;
+    </div>
+  );
 };
 
 export default DashboardView;

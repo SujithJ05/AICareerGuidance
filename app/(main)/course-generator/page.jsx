@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { Plus, Book, Clock, Award, Trash2, Star, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, SignInButton, useAuth } from "@clerk/nextjs";
@@ -277,107 +278,129 @@ export default function CourseGeneratorPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.map((course) => (
-              <div
+            {filteredCourses.map((course, i) => (
+              <motion.div
                 key={course.id}
+                custom={i}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{
+                  opacity: 1,
+                  y: 0,
+                  transition: {
+                    delay: i * 0.08,
+                    type: "spring",
+                    stiffness: 80,
+                    damping: 15,
+                  },
+                }}
+                whileHover={{
+                  scale: 1.03,
+                  boxShadow: "0 8px 32px 0 rgba(80, 0, 200, 0.10)",
+                  transition: { type: "spring", stiffness: 200, damping: 12 },
+                }}
+                viewport={{ once: true, amount: 0.2 }}
+                className="h-full"
                 onClick={() => router.push(`/course-generator/${course.id}`)}
-                className="bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer border border-gray-200 overflow-hidden"
               >
-                <div className="bg-black p-5 text-white">
-                  <h3 className="text-lg font-bold mb-1 line-clamp-2">
-                    {course.title}
-                  </h3>
-                  <p className="text-gray-300 text-sm line-clamp-2">
-                    {course.description}
-                  </p>
-                </div>
-                <div className="p-5 space-y-3">
-                  <div className="flex items-center gap-2 text-sm flex-wrap">
-                    <span className="bg-gray-200 text-black px-3 py-1 rounded-full font-medium">
-                      {course.category}
-                    </span>
-                    <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-medium flex items-center gap-1">
-                      <Award className="w-4 h-4" />
-                      {course.difficulty}
-                    </span>
-                    {course.rating && (
-                      <span className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full font-medium flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                        {course.rating.toFixed(1)}
+                <div className="bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer border border-gray-200 overflow-hidden h-full flex flex-col">
+                  <div className="bg-black p-5 text-white">
+                    <h3 className="text-lg font-bold mb-1 line-clamp-2">
+                      {course.title}
+                    </h3>
+                    <p className="text-gray-300 text-sm line-clamp-2">
+                      {course.description}
+                    </p>
+                  </div>
+                  <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
+                    <div className="flex items-center gap-2 text-sm flex-wrap">
+                      <span className="bg-gray-200 text-black px-3 py-1 rounded-full font-medium">
+                        {course.category}
                       </span>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{course.duration}</span>
+                      <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-medium flex items-center gap-1">
+                        <Award className="w-4 h-4" />
+                        {course.difficulty}
+                      </span>
+                      {course.rating && (
+                        <span className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full font-medium flex items-center gap-1">
+                          <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                          {course.rating.toFixed(1)}
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Book className="w-4 h-4" />
-                      <span>{course.chapters} chapters</span>
+                    <div className="flex items-center justify-between text-sm text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{course.duration}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Book className="w-4 h-4" />
+                        <span>{course.chapters} chapters</span>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between text-sm text-black mb-1">
-                      <span>Progress</span>
-                      <span>{computeCompletion(course)}%</span>
+                    <div>
+                      <div className="flex items-center justify-between text-sm text-black mb-1">
+                        <span>Progress</span>
+                        <span>{computeCompletion(course)}%</span>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-black"
+                          style={{ width: `${computeCompletion(course)}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-black"
-                        style={{ width: `${computeCompletion(course)}%` }}
-                      ></div>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      {computeCompletion(course) === 100 ? (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/course-generator/${course.id}`);
+                            }}
+                            className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition font-medium"
+                          >
+                            View Course
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(
+                                `/certificates?courseId=${course.id}`
+                              );
+                            }}
+                            className="w-full bg-linear-to-r from-yellow-500 to-amber-500 text-black py-2 rounded-lg hover:from-yellow-600 hover:to-amber-600 transition font-medium inline-flex items-center justify-center gap-2"
+                          >
+                            <Trophy className="w-4 h-4" />
+                            View Certificate
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/course-generator/${course.id}`);
+                            }}
+                            className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition font-medium"
+                          >
+                            View Course
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDeleteConfirm(course.id, course.title);
+                            }}
+                            className="w-full bg-white text-red-600 border border-red-200 py-2 rounded-lg hover:bg-red-50 transition font-medium inline-flex items-center justify-center gap-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </>
+                      )}
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    {computeCompletion(course) === 100 ? (
-                      <>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/course-generator/${course.id}`);
-                          }}
-                          className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition font-medium"
-                        >
-                          View Course
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/certificates?courseId=${course.id}`);
-                          }}
-                          className="w-full bg-linear-to-r from-yellow-500 to-amber-500 text-black py-2 rounded-lg hover:from-yellow-600 hover:to-amber-600 transition font-medium inline-flex items-center justify-center gap-2"
-                        >
-                          <Trophy className="w-4 h-4" />
-                          View Certificate
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/course-generator/${course.id}`);
-                          }}
-                          className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition font-medium"
-                        >
-                          View Course
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openDeleteConfirm(course.id, course.title);
-                          }}
-                          className="w-full bg-white text-red-600 border border-red-200 py-2 rounded-lg hover:bg-red-50 transition font-medium inline-flex items-center justify-center gap-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete
-                        </button>
-                      </>
-                    )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
