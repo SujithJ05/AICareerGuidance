@@ -189,9 +189,29 @@ export async function checkAts(resumeContent, jobDescription) {
       messages: [{ role: "user", content: prompt }],
     });
     const text = result.content[0].text;
-    return text;
+
+    try {
+      // First, try to parse the whole string.
+      const parsed = JSON.parse(text);
+      return { success: true, data: parsed };
+    } catch (e) {
+      // If that fails, try to extract JSON from a larger string.
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[0]);
+          return { success: true, data: parsed };
+        } catch (e2) {
+          // If even that fails, return an error.
+          console.error("Failed to parse extracted JSON", e2);
+          return { success: false, error: "Failed to parse AI response." };
+        }
+      }
+      console.error("Failed to parse AI response and no JSON object found", e);
+      return { success: false, error: "Failed to parse AI response." };
+    }
   } catch (error) {
     console.error("error checking ats", error);
-    throw new Error("Error checking ats");
+    return { success: false, error: error.message || 'An unknown error occurred during ATS check.' };
   }
 }

@@ -19,15 +19,24 @@ export const AtsChecker = ({ content }) => {
             return;
         }
         setIsChecking(true);
-        try {
-            const result = await checkAts(content, jobDescription);
-            setAtsResult(JSON.parse(result));
-            toast.success('ATS check completed!');
-        } catch (error) {
-            toast.error('Failed to check ATS score.');
-        } finally {
-            setIsChecking(false);
+
+        const result = await checkAts(content, jobDescription);
+
+        if (result.success) {
+            try {
+                const parsedResult = JSON.parse(result.data);
+                setAtsResult(parsedResult);
+                toast.success('ATS check completed!');
+            } catch (e) {
+                console.error("Failed to parse AI response:", result.data);
+                toast.error("The AI returned a response in an unexpected format.");
+            }
+        } else {
+            // Display the specific error from the backend
+            toast.error(result.error);
         }
+
+        setIsChecking(false);
     };
 
     return (

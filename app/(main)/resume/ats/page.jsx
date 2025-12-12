@@ -172,9 +172,54 @@ const AtsCheckerPage = () => {
     setIsChecking(true);
     try {
       const result = await checkAts(resumeContent, jobDescription);
-      setAtsResult(JSON.parse(result));
-      toast.success("ATS check completed!");
+      let parsed = null;
+      // Log the raw result for debugging
+      console.log("Raw ATS result:", result);
+      if (result && typeof result === "object" && result.success) {
+        // New server action format
+        if (result.data) {
+          try {
+            parsed =
+              typeof result.data === "string"
+                ? JSON.parse(result.data)
+                : result.data;
+          } catch (err) {
+            // If parsing fails, show raw data
+            console.error(
+              "Failed to parse ATS data as JSON:",
+              result.data,
+              err
+            );
+            toast.error(
+              "ATS check completed, but result could not be parsed. Showing raw analysis."
+            );
+            setAtsResult({ raw: result.data });
+            return;
+          }
+        } else if (result.error) {
+          toast.error(result.error);
+          return;
+        }
+      } else if (typeof result === "string") {
+        try {
+          parsed = JSON.parse(result);
+        } catch (err) {
+          console.error("Failed to parse ATS result as JSON:", result, err);
+          toast.error(
+            "ATS check completed, but result could not be parsed. Showing raw analysis."
+          );
+          setAtsResult({ raw: result });
+          return;
+        }
+      }
+      if (parsed) {
+        setAtsResult(parsed);
+        toast.success("ATS check completed!");
+      } else {
+        toast.error("ATS check failed: No result returned.");
+      }
     } catch (error) {
+      console.error("Failed to check ATS score:", error);
       toast.error("Failed to check ATS score.");
     } finally {
       setIsChecking(false);
@@ -321,24 +366,43 @@ const AtsCheckerPage = () => {
             <CardTitle>ATS Score & Feedback</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <p className="font-medium">
-                Overall Match Score: {atsResult.score}%
-              </p>
-              <Progress value={atsResult.score} className="w-full" />
-            </div>
-            <div>
-              <h4 className="font-medium">Keywords Matched:</h4>
-              <p>{atsResult.keywords_matched.join(", ")}</p>
-            </div>
-            <div>
-              <h4 className="font-medium">Keywords Missing:</h4>
-              <p>{atsResult.keywords_missing.join(", ")}</p>
-            </div>
-            <div>
-              <h4 className="font-medium">Suggestions:</h4>
-              <p>{atsResult.suggestions}</p>
-            </div>
+            {atsResult.raw ? (
+              <div>
+                <h4 className="font-medium text-red-600">
+                  Raw Analysis Output
+                </h4>
+                <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto">
+                  {typeof atsResult.raw === "string"
+                    ? atsResult.raw
+                    : JSON.stringify(atsResult.raw, null, 2)}
+                </pre>
+                <p className="text-xs text-gray-500 mt-2">
+                  (Could not parse structured ATS result. Please review the raw
+                  output.)
+                </p>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <p className="font-medium">
+                    Overall Match Score: {atsResult.score}%
+                  </p>
+                  <Progress value={atsResult.score} className="w-full" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Keywords Matched:</h4>
+                  <p>{atsResult.keywords_matched?.join(", ")}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium">Keywords Missing:</h4>
+                  <p>{atsResult.keywords_missing?.join(", ")}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium">Suggestions:</h4>
+                  <p>{atsResult.suggestions}</p>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
