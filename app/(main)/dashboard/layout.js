@@ -3,19 +3,20 @@ import { PacmanLoader } from "react-spinners";
 
 const Layout = ({ children }) => {
   return (
-    <div className="px-5 pt-24">
-      <div className="flex items-center justify-between mb-5">
-        <h1 className="text-6xl font-bold text-center">Market Overview</h1>
-      </div>
-      <Suspense
-        fallback={
-          <div className="flex justify-center items-center h-64">
-            <PacmanLoader color="gray" />
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 pt-8 pb-8">
+      <div className="max-w-6xl mx-auto px-4">
+        <Suspense
+          fallback={
+            <div className="flex justify-center items-center h-64">
+              <PacmanLoader color="gray" />
+            </div>
+          }
+        >
+          <div className="bg-white/90 rounded-2xl shadow-xl p-10 border border-gray-200">
+            {children}
           </div>
-        }
-      >
-        {children}
-      </Suspense>
+        </Suspense>
+      </div>
     </div>
   );
 };

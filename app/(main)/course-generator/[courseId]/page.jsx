@@ -249,29 +249,35 @@ export default function CourseViewPage({ params }) {
     );
   }
   return (
-    <div className="min-h-screen bg-white pt-16">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 pt-16">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 border-b border-gray-800 px-8 py-5 flex items-center justify-between shadow-md">
         <button
           onClick={() => router.push("/course-generator")}
-          className="flex items-center gap-2 text-gray-500 hover:text-black"
+          className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>Back to Course Prep</span>
         </button>
-        <h1 className="text-xl font-bold text-black">{courseData.title}</h1>
+        <h1 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-lg">
+          {courseData.title}
+        </h1>
         <div className="w-32"></div> {/* Spacer for centering */}
       </div>
 
       {/* Course Content */}
-      <div className="flex h-[calc(100vh-73px)]">
+      <div className="flex h-[calc(100vh-85px)]">
         {/* Sidebar */}
-        <div className="w-80 bg-black text-white flex flex-col">
-          <div className="p-6 border-b border-gray-700">
-            <h2 className="text-2xl font-bold mb-2">{courseData.title}</h2>
-            <p className="text-gray-300 text-sm">{courseData.description}</p>
+        <div className="w-80 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-700 text-white flex flex-col shadow-xl border-r border-gray-800">
+          <div className="p-7 border-b border-gray-700">
+            <h2 className="text-2xl font-extrabold mb-2 text-white drop-shadow">
+              {courseData.title}
+            </h2>
+            <p className="text-gray-300 text-sm mb-2">
+              {courseData.description}
+            </p>
             <div className="mt-4 flex items-center gap-4 text-sm flex-wrap">
-              <span className="bg-gray-700 px-3 py-1 rounded">
+              <span className="bg-gray-700/80 px-3 py-1 rounded font-semibold">
                 {courseData.difficulty}
               </span>
               <span className="flex items-center gap-1">
@@ -290,7 +296,7 @@ export default function CourseViewPage({ params }) {
               <button
                 onClick={generateCertificate}
                 disabled={isGeneratingCertificate}
-                className="mt-4 w-full flex items-center justify-center gap-2 bg-linear-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-semibold px-4 py-3 rounded-lg transition disabled:opacity-50"
+                className="mt-4 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold px-4 py-3 rounded-lg transition disabled:opacity-50 shadow-lg"
               >
                 {isGeneratingCertificate ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -302,14 +308,16 @@ export default function CourseViewPage({ params }) {
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
             {chapters.map((ch, idx) => (
               <div
                 key={idx}
                 role="button"
                 tabIndex={0}
-                className={`w-full text-left px-6 py-4 border-b border-gray-700 transition-all cursor-pointer ${
-                  selected === idx ? "bg-gray-700" : "hover:bg-gray-800"
+                className={`w-full text-left px-7 py-5 border-b border-gray-700 transition-all cursor-pointer group ${
+                  selected === idx
+                    ? "bg-gradient-to-r from-gray-700 via-gray-600 to-gray-700 shadow-lg scale-[1.03] border-l-4 border-yellow-400"
+                    : "hover:bg-gray-800"
                 }`}
                 onClick={() => {
                   setSelected(idx);
@@ -327,20 +335,24 @@ export default function CourseViewPage({ params }) {
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5" aria-label="Chapter completion">
                     {progress[idx] ? (
-                      <CheckSquare className="w-5 h-5 text-white" />
+                      <CheckSquare className="w-5 h-5 text-yellow-400" />
                     ) : (
-                      <Square className="w-5 h-5 text-white" />
+                      <Square className="w-5 h-5 text-gray-400" />
                     )}
                   </div>
                   <span
-                    className={`flex items-center justify-center min-w-7 h-7 rounded-full font-bold text-sm ${
-                      selected === idx ? "bg-white text-black" : "bg-gray-700"
-                    }`}
+                    className={`flex items-center justify-center min-w-7 h-7 rounded-full font-bold text-sm border-2 ${
+                      selected === idx
+                        ? "bg-white text-black border-yellow-400"
+                        : "bg-gray-700 border-gray-600 text-white"
+                    } group-hover:border-yellow-300 transition-all`}
                   >
                     {idx + 1}
                   </span>
                   <div className="flex-1">
-                    <div className="font-semibold text-sm">{ch.title}</div>
+                    <div className="font-semibold text-base group-hover:text-yellow-200 transition-colors">
+                      {ch.title}
+                    </div>
                     {ch.duration && (
                       <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
@@ -357,7 +369,7 @@ export default function CourseViewPage({ params }) {
                               [idx]: !prev[idx],
                             }));
                           }}
-                          className="flex items-center gap-1 text-sm text-gray-300 hover:text-white"
+                          className="flex items-center gap-1 text-sm text-gray-300 hover:text-yellow-200 focus:text-yellow-200 transition-colors"
                         >
                           {expanded[idx] ? (
                             <ChevronDown className="w-3 h-3" />
@@ -374,12 +386,16 @@ export default function CourseViewPage({ params }) {
                                 e.stopPropagation();
                                 goToSection(idx, sIdx, false);
                               }}
-                              className="flex items-center gap-2 w-full text-left text-sm text-gray-300 hover:text-white truncate"
+                              className={`flex items-center gap-2 w-full text-left text-sm truncate px-2 py-1 rounded transition-all ${
+                                sectionProgress[idx]?.[sIdx]
+                                  ? "text-yellow-300 bg-gray-800"
+                                  : "text-gray-300 hover:text-yellow-200 hover:bg-gray-800"
+                              }`}
                             >
                               {sectionProgress[idx]?.[sIdx] ? (
-                                <CheckSquare className="w-4 h-4" />
+                                <CheckSquare className="w-4 h-4 text-yellow-300" />
                               ) : (
-                                <Square className="w-4 h-4" />
+                                <Square className="w-4 h-4 text-gray-400" />
                               )}
                               {sec.title}
                             </button>
@@ -394,14 +410,14 @@ export default function CourseViewPage({ params }) {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto bg-white p-8 pb-24">
+        <div className="flex-1 overflow-y-auto bg-gradient-to-br from-white via-gray-50 to-gray-200 p-10 pb-24">
           <div className="max-w-4xl mx-auto">
-            <div className="prose prose-lg max-w-none">
+            <div className="prose prose-lg max-w-none bg-white/90 rounded-2xl shadow-xl p-10 border border-gray-200">
               <ReactMarkdown
                 components={{
                   pre({ children }) {
                     return (
-                      <pre className="bg-black text-white rounded-lg p-6 overflow-x-auto my-6 font-mono text-sm">
+                      <pre className="bg-gray-900 text-white rounded-lg p-6 overflow-x-auto my-6 font-mono text-sm shadow-inner">
                         {children}
                       </pre>
                     );
@@ -413,21 +429,21 @@ export default function CourseViewPage({ params }) {
                     }
                     // For inline code
                     return (
-                      <code className="bg-gray-100 text-black px-2 py-1 rounded text-sm font-mono">
+                      <code className="bg-gray-200 text-black px-2 py-1 rounded text-sm font-mono">
                         {children}
                       </code>
                     );
                   },
                   h1({ children }) {
                     return (
-                      <h1 className="text-3xl font-bold mt-8 mb-4 text-black">
+                      <h1 className="text-3xl font-bold mt-8 mb-4 text-gray-900">
                         {children}
                       </h1>
                     );
                   },
                   h2({ children }) {
                     return (
-                      <h2 className="text-2xl font-bold mt-6 mb-3 text-black">
+                      <h2 className="text-2xl font-bold mt-6 mb-3 text-gray-900">
                         {children}
                       </h2>
                     );
@@ -440,7 +456,7 @@ export default function CourseViewPage({ params }) {
                     return (
                       <h3
                         id={id}
-                        className="text-xl font-semibold mt-4 mb-2 text-black"
+                        className="text-xl font-semibold mt-4 mb-2 text-gray-800"
                       >
                         {children}
                       </h3>
@@ -448,7 +464,7 @@ export default function CourseViewPage({ params }) {
                   },
                   p({ children }) {
                     return (
-                      <p className="mb-4 text-gray-600 leading-relaxed">
+                      <p className="mb-4 text-gray-700 leading-relaxed">
                         {children}
                       </p>
                     );
@@ -468,7 +484,7 @@ export default function CourseViewPage({ params }) {
                     );
                   },
                   li({ children }) {
-                    return <li className="text-gray-600">{children}</li>;
+                    return <li className="text-gray-700">{children}</li>;
                   },
                 }}
               >
@@ -482,10 +498,10 @@ export default function CourseViewPage({ params }) {
                     goToSection(selected, selectedSection - 1, false);
                 }}
                 disabled={selectedSection === 0}
-                className={`px-4 py-2 rounded border ${
+                className={`px-5 py-2 rounded-lg border font-semibold shadow-sm transition-all ${
                   selectedSection === 0
-                    ? "text-gray-400 border-gray-300 cursor-not-allowed"
-                    : "text-black border-gray-300 hover:bg-gray-100"
+                    ? "text-gray-400 border-gray-200 bg-gray-100 cursor-not-allowed"
+                    : "text-gray-900 border-gray-300 bg-white hover:bg-gray-50"
                 }`}
               >
                 Previous
@@ -500,7 +516,7 @@ export default function CourseViewPage({ params }) {
                     goToSection(selected + 1, 0, false);
                   }
                 }}
-                className="px-4 py-2 rounded bg-black text-white hover:bg-gray-800"
+                className="px-5 py-2 rounded-lg bg-gray-900 text-white font-semibold shadow-md hover:bg-gray-800 transition-all"
               >
                 Next
               </button>

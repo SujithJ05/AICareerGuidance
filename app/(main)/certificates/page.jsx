@@ -133,20 +133,20 @@ export default function CertificatesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white pt-24 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white pt-24 px-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-4xl mx-auto bg-white/90 rounded-2xl shadow-xl p-10 border border-gray-200">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Award className="w-8 h-8 text-yellow-500" />
-            <h1 className="text-3xl font-bold text-black">
+            <h1 className="text-3xl font-extrabold text-gray-900">
               Streak & Certifications
             </h1>
           </div>
@@ -158,7 +158,7 @@ export default function CertificatesPage() {
         {/* Streak Badges Section */}
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-black flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <Flame className="w-5 h-5 text-orange-500" />
               Streak Badges
             </h2>
