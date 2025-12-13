@@ -383,7 +383,7 @@ export default function InterviewPage({ params }) {
         toast.success("Feedback generated successfully!");
 
         // ✅ Redirect to feedback page
-        router.push(`/interview/${id}/feedback`);
+        router.push(`/aivoiceinterview/${id}/feedback`);
       } catch (error) {
         console.error("Error generating feedback:", error);
         toast.error("Failed to generate feedback");

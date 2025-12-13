@@ -140,13 +140,17 @@ export default function AiVoiceInterviewDashboard() {
 
                 <p
                   className={`font-semibold ${
-                    feedbackData.feedback.recommendation?.status.toLowerCase() ===
-                    "selected"
+                    feedbackData.feedback.recommendation &&
+                    typeof feedbackData.feedback.recommendation.status ===
+                      "string" &&
+                    feedbackData.feedback.recommendation.status.toLowerCase() ===
+                      "selected"
                       ? "text-green-400"
                       : "text-red-400"
                   }`}
                 >
-                  {feedbackData.feedback.recommendation?.status}
+                  {feedbackData.feedback.recommendation?.status ||
+                    "No recommendation"}
                 </p>
 
                 <p className="text-gray-300 leading-relaxed">
