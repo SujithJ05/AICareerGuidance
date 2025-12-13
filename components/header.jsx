@@ -35,7 +35,7 @@ const Header = async () => {
       <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
           <span className="h-12 py-1 w-auto object-contain text-2xl font-extrabold text-white tracking-tight drop-shadow-lg">
-            CareerGuideAi
+            CareerGuideAI
           </span>
         </Link>
 
@@ -76,6 +76,15 @@ const Header = async () => {
                   >
                     <FileText className="h-4 w-4" />
                     Resume Studio
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/tools/voice-interview"
+                    className="flex items-center gap-2 w-full"
+                  >
+                    <GraduationCap className="h-4 w-4" />
+                    Voice Interview
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

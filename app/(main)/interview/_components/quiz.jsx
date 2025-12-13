@@ -37,12 +37,9 @@ const Quiz = () => {
     setData: setResultData,
   } = useFetch(saveQuizResult);
 
-  // Update streak when quiz is started
   useEffect(() => {
     if (quizData) {
       setAnswers(new Array(quizData.length).fill(null));
-      // Update streak when user starts a quiz
-      fetch("/api/streak", { method: "POST" }).catch(console.error);
     }
   }, [quizData]);
 
@@ -113,8 +110,12 @@ const Quiz = () => {
           </p>
         </CardContent>
         <CardFooter>
-          <Button className="w-full" onClick={generateQuizFn}>
-            Start Your Quiz
+          <Button
+            className="w-full cursor-pointer"
+            onClick={generateQuizFn}
+            disabled={generatingQuiz}
+          >
+            {generatingQuiz ? "⏳ Generating Quiz..." : "Start Your Quiz"}
           </Button>
         </CardFooter>
       </Card>

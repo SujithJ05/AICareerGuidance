@@ -1,12 +1,16 @@
 "use server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
+//import { GoogleGenerativeAI } from "@google/generative-ai";
 import Anthropic from "@anthropic-ai/sdk";
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// const model = genAI.getGenerativeModel({
+//   model: "gemini-2.0-flash",
+// });
 
-const anthropic = new Anthropic({
+const client = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY,
 });
-const MODEL_NAME = "claude-sonnet-4-5-20250929";
 
 export const generateAIInsights = async (industry) => {
   const prompt = `
@@ -29,15 +33,22 @@ export const generateAIInsights = async (industry) => {
           Include at least 5 skills and trends.
         `;
 
-  const result = await anthropic.messages.create({
-    model: MODEL_NAME,
-    max_tokens: 4000,
-    messages: [{ role: "user", content: prompt }],
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-5-20250929",
+    max_tokens: 1000,
+    temperature: 0.2,
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
   });
-  const text = result.content[0].text;
-  const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+  // Extract text result
+  let text = response.content[0].text.trim();
+  let cleaned = text.replace(/```json|```/g, "").trim();
 
-  return JSON.parse(cleanedText);
+  return JSON.parse(cleaned);
 };
 
 export async function getIndustryInsights() {
@@ -51,30 +62,28 @@ export async function getIndustryInsights() {
   });
   if (!user) throw new Error("user not found");
 
-  if (!user.industry || user.industry.length === 0) {
+  if (!user.industry) {
     // User hasn't selected an industry yet
     return null; // Or redirect to onboarding
   }
 
-  // Fetch the industry insight separately based on the user's first industry
-  // Assuming a user primarily focuses on their first listed industry for a single insight
-  let industryInsight = await db.industryInsight.findUnique({
-    where: { industry: user.industry[0] },
-  });
-
-  if (!industryInsight) {
-    // If no existing insight, generate new ones
-    const insights = await generateAIInsights(user.industry[0]); // Pass the first industry
-
-    industryInsight = await db.industryInsight.create({
-      data: {
-        industry: user.industry[0], // Use the first industry for creation
-        ...insights,
-        nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
+  if (!user.industryInsight) {
+    // Check if industryInsight already exists (race condition safe)
+    let industryInsight = await db.industryInsight.findUnique({
+      where: { industry: user.industry },
     });
+    if (!industryInsight) {
+      const insights = await generateAIInsights(user.industry);
+      industryInsight = await db.industryInsight.create({
+        data: {
+          industry: user.industry,
+          ...insights,
+          nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      });
+    }
+    return industryInsight;
   }
-  // TODO: Add logic to update insight if nextUpdate is in the past
 
-  return industryInsight;
+  return user.industryInsight;
 }

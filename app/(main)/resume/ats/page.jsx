@@ -4,7 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { checkAts, getResumes } from "@/actions/resume";
+import { getResumes } from "@/actions/resume";
+// Helper to call the ATS checker API
+async function checkAts({ jobDescription, resumeFile }) {
+  const formData = new FormData();
+  formData.append("jobDescription", jobDescription);
+  formData.append("resume", resumeFile);
+  const res = await fetch("/api/ats-checker", {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    throw new Error("ATS check failed");
+  }
+  const data = await res.json();
+  return data.analysis;
+}
 import { toast } from "sonner";
 import { Loader2, Upload, ArrowLeft, FileText, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";

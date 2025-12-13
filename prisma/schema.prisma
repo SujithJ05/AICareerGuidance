@@ -1,3 +1,17 @@
+model VoiceInterview {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  jobPosition   String
+  jobDescription String
+  duration      Int
+  questionsList Json
+  feedback      String?  // JSON string or null
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -54,6 +68,7 @@ model User {
   resumes     Resume[]
   coverLetter CoverLetter[]
   courses     Course[]
+  voiceInterviews VoiceInterview[]
 
 }
 
