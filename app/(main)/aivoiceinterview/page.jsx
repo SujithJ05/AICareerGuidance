@@ -43,7 +43,9 @@ export default function AiVoiceInterviewDashboard() {
     <div className="min-h-screen w-full px-6 py-10 pt-24 text-white flex flex-col items-center">
       <Card className="bg-neutral-900 border-neutral-800 w-full max-w-6xl mx-auto mb-12 shadow-lg rounded-xl">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold">Voice Interviews</CardTitle>
+          <CardTitle className="text-3xl font-bold text-white">
+            AI Voice Interview
+          </CardTitle>
         </CardHeader>
         <CardContent className="text-gray-300">
           <p className="mb-5 text-lg">

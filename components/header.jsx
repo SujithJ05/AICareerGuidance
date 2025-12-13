@@ -80,20 +80,20 @@ const Header = async () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link
-                    href="/tools/voice-interview"
-                    className="flex items-center gap-2 w-full"
-                  >
-                    <GraduationCap className="h-4 w-4" />
-                    Voice Interview
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link
                     href="/interview"
                     className="flex items-center gap-2 w-full"
                   >
                     <GraduationCap className="h-4 w-4" />
                     Interview Prep
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/tools/voice-interview"
+                    className="flex items-center gap-2 w-full"
+                  >
+                    <GraduationCap className="h-4 w-4" />
+                    AI Voice Interview
                   </Link>
                 </DropdownMenuItem>
 

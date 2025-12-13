@@ -13,9 +13,6 @@ const IndustryInsightsPage = async () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <DashboardView insights={insights} />
-      <div className="mt-12">
-        <CourseDashboard />
-      </div>
     </div>
   );
 };
