@@ -114,9 +114,13 @@ const DashboardView = ({ insights }) => {
             title: "Top Skills",
             icon: <Brain className="h-4 w-4 text-muted-foreground" />,
             content: (
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1 w-full">
                 {insights.topSkills.map((skill) => (
-                  <Badge key={skill} variant="secondary">
+                  <Badge
+                    key={skill}
+                    variant="secondary"
+                    className="whitespace-normal break-words max-w-full min-w-0"
+                  >
                     {skill}
                   </Badge>
                 ))}
