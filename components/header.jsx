@@ -58,15 +58,7 @@ const Header = async () => {
               <DropdownMenuContent>
                 <DropdownMenuLabel>Tools & Resources</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/tools/chatbot"
-                    className="flex items-center gap-2 w-full"
-                  >
-                    <ScanSearch className="h-4 w-4" />
-                    Chatbot
-                  </Link>
-                </DropdownMenuItem>
+                {/* AI Chat Assistance moved below AI Voice Interview */}
                 <DropdownMenuItem asChild>
                   <Link
                     href="/dashboard"
@@ -95,6 +87,7 @@ const Header = async () => {
                     Interview Prep
                   </Link>
                 </DropdownMenuItem>
+
                 <DropdownMenuItem asChild>
                   <Link
                     href="/tools/voice-interview"
@@ -102,6 +95,16 @@ const Header = async () => {
                   >
                     <GraduationCap className="h-4 w-4" />
                     AI Voice Interview
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/tools/chatbot"
+                    className="flex items-center gap-2 w-full"
+                  >
+                    <ScanSearch className="h-4 w-4" />
+                    AI Chat Assistance
                   </Link>
                 </DropdownMenuItem>
 

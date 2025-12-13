@@ -364,11 +364,13 @@ export default function InterviewPage({ params }) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const finalConversation = conversationRef.current;
-      console.log("Final Conversation:", finalConversation);
-
+      console.log("Final Conversation (ref):", finalConversation);
       if (!finalConversation || finalConversation.length === 0) {
         toast.error("No conversation data captured. Please try again.");
-        console.error("Conversation is empty!");
+        console.error("Conversation is empty!", {
+          conversationRef: conversationRef.current,
+          vapi,
+        });
         return;
       }
 
@@ -385,13 +387,18 @@ export default function InterviewPage({ params }) {
         // ✅ Redirect to feedback page
         router.push(`/aivoiceinterview/${id}/feedback`);
       } catch (error) {
-        console.error("Error generating feedback:", error);
+        console.error(
+          "Error generating feedback:",
+          error,
+          error?.message,
+          error?.stack
+        );
         toast.error("Failed to generate feedback");
       }
     };
 
     const handleError = (error) => {
-      console.error(" error:", error);
+      console.error("Vapi error handler:", error, error?.message, error?.stack);
     };
 
     // Register event listeners
