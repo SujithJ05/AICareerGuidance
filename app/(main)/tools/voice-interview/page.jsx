@@ -1,5 +1,13 @@
-// Voice Interview Tool Entry Point (Page)
-// This file enables Next.js routing for /tools/voice-interview
-import VoiceInterview from "../voice-interview.jsx";
+"use client";
+import dynamic from "next/dynamic";
+import React from "react";
 
-export default VoiceInterview;
+// Dynamically import the dashboard for client-side rendering only
+const AiVoiceInterviewDashboard = dynamic(
+  () => import("../aivoiceinterview/page.jsx"),
+  { ssr: false }
+);
+
+export default function VoiceInterviewToolPage() {
+  return <AiVoiceInterviewDashboard />;
+}
