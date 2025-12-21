@@ -1,15 +1,16 @@
 "use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function AtsCheckerPage() {
   const [jobDescription, setJobDescription] = useState("");
   const [resume, setResume] = useState(null);
-  const [analysis, setAnalysis] = useState("");
+  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e) => {
@@ -24,7 +25,7 @@ export default function AtsCheckerPage() {
     }
 
     setLoading(true);
-    setAnalysis("");
+    setResult(null);
 
     const formData = new FormData();
     formData.append("jobDescription", jobDescription);
@@ -36,105 +37,58 @@ export default function AtsCheckerPage() {
         body: formData,
       });
 
-      const result = await response.json();
-      if (response.ok) {
-        setAnalysis(result.analysis);
-      } else {
-        throw new Error(result.error || "Something went wrong");
-      }
+      const data = await response.json();
+      setResult(data);
     } catch (error) {
-      console.error("Error analyzing resume:", error);
-      alert(error.message);
+      console.error("Error:", error);
+      alert("An error occurred while analyzing the resume.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-100 via-white to-gray-200 flex items-center justify-center py-12">
-      <div className="w-full max-w-2xl mx-auto bg-white/90 rounded-2xl shadow-xl p-10 border border-gray-200">
-        <h1 className="text-3xl font-extrabold mb-6 text-gray-900 text-center">ATS Resume Checker</h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="job-description">Job Description</Label>
-            <Textarea
-              id="job-description"
-              value={jobDescription}
-              onChange={(e) => setJobDescription(e.target.value)}
-              rows={6}
-              className="w-full mt-2"
-            />
-          </div>
-          <div>
-            <Label htmlFor="resume-upload">Upload Resume</Label>
-            <Input
-              id="resume-upload"
-              type="file"
-              accept=".pdf,.doc,.docx,.txt"
-              onChange={handleFileChange}
-              className="w-full mt-2"
-            />
-          </div>
-          <Button type="submit" disabled={loading} className="w-full text-lg font-semibold bg-gray-900 hover:bg-gray-800">
-            {loading ? "Checking..." : "Check ATS Score"}
-          </Button>
-        </form>
-        {analysis && (
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 80, damping: 15 }}
-            className="mt-8 p-6 bg-gray-50 rounded-xl shadow-inner border border-gray-200"
-          >
-            <h2 className="font-semibold mb-2 text-gray-800">Analysis Result</h2>
-            <pre className="whitespace-pre-wrap text-base text-gray-700">{analysis}</pre>
-          </motion.div>
-        )}
-      </div>
-    </div>
-  );
-}
-  return (
-    <div className="min-h-screen bg-linear-to-br from-gray-100 via-white to-gray-200 flex items-center justify-center py-12">
-      <div className="w-full max-w-2xl mx-auto bg-white/90 rounded-2xl shadow-xl p-10 border border-gray-200">
-        <h1 className="text-3xl font-extrabold mb-6 text-gray-900 text-center">ATS Resume Checker</h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="job-description">Job Description</Label>
-            <Textarea
-              id="job-description"
-              value={jobDescription}
-              onChange={(e) => setJobDescription(e.target.value)}
-              rows={6}
-              className="w-full mt-2"
-            />
-          </div>
-          <div>
-            <Label htmlFor="resume-upload">Upload Resume</Label>
-            <Input
-              id="resume-upload"
-              type="file"
-              accept=".pdf,.doc,.docx,.txt"
-              onChange={handleFileChange}
-              className="w-full mt-2"
-            />
-          </div>
-          <Button type="submit" disabled={loading} className="w-full text-lg font-semibold bg-gray-900 hover:bg-gray-800">
-            {loading ? "Checking..." : "Check ATS Score"}
-          </Button>
-        </form>
-        {analysis && (
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 80, damping: 15 }}
-            className="mt-8 p-6 bg-gray-50 rounded-xl shadow-inner border border-gray-200"
-          >
-            <h2 className="font-semibold mb-2 text-gray-800">Analysis Result</h2>
-            <pre className="whitespace-pre-wrap text-base text-gray-700">{analysis}</pre>
-          </motion.div>
-        )}
-      </div>
+    <div className="container mx-auto p-6 mt-20">
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-4xl">ATS Resume Checker</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <Label htmlFor="job-description">Job Description</Label>
+              <Textarea
+                id="job-description"
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+                placeholder="Paste the job description here"
+                className="h-40"
+              />
+            </div>
+            <div>
+              <Label htmlFor="resume">Resume (PDF only)</Label>
+              <Input
+                id="resume"
+                type="file"
+                accept=".pdf"
+                onChange={handleFileChange}
+              />
+            </div>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Analyzing..." : "Check ATS Score"}
+            </Button>
+          </form>
+
+          {result && (
+            <div className="mt-8">
+              <h3 className="text-2xl font-semibold">Analysis Result</h3>
+              <pre className="bg-gray-100 p-4 rounded-md mt-4 whitespace-pre-wrap">
+                {JSON.stringify(result, null, 2)}
+              </pre>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

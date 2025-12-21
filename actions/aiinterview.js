@@ -196,7 +196,7 @@ Return JSON in exactly the following structure:
       ],
     });
 
-    let raw = response.output_text ?? response.content[0]?.text;
+    let raw = response.content[0]?.text;
     return raw;
   } catch (error) {
     console.error("AI Question Generation Error:", error);

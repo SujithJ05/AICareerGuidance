@@ -1,3 +1,5 @@
+"use server";
+
 // --- TEMP STUBS FOR PRODUCTION BUILD ---
 // TODO: Implement these properly
 export async function checkAts(content, jobDescription) {
@@ -7,7 +9,6 @@ export async function checkAts(content, jobDescription) {
 export async function getResumeById(resumeId) {
   return null;
 }
-("use server");
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
