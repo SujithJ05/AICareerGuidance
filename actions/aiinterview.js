@@ -59,7 +59,7 @@ The goal is to create a structured, relevant, and time-optimized interview plan 
     });
 
     // Claude returns JSON text so we parse it
-    let raw = response.output_text ?? response.content[0]?.text;
+    let raw = response.content[0]?.text;
     raw = raw?.replace(/```json|```/g, "").trim();
     console.log("AI Question Generation Response:", raw);
     return JSON.parse(raw);
