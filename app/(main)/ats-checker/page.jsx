@@ -51,41 +51,46 @@ export default function AtsCheckerPage() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">ATS Resume Checker</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Label htmlFor="job-description">Job Description</Label>
-          <Textarea
-            id="job-description"
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-            placeholder="Paste the job description here"
-            className="w-full"
-          />
-        </div>
-        <div>
-          <Label htmlFor="resume">Resume (PDF)</Label>
-          <Input
-            id="resume"
-            type="file"
-            accept=".pdf"
-            onChange={handleFileChange}
-            className="w-full"
-          />
-        </div>
-        <Button type="submit" disabled={loading}>
-          {loading ? "Analyzing..." : "Analyze Resume"}
-        </Button>
-      </form>
-      {analysis && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold">Analysis Result</h2>
-          <div className="p-4 bg-gray-100 rounded-md dark:bg-gray-800">
-            <pre className="whitespace-pre-wrap">{analysis}</pre>
+    <div className="min-h-screen bg-linear-to-br from-gray-100 via-white to-gray-200 flex items-center justify-center py-12">
+      <div className="w-full max-w-2xl mx-auto bg-white/90 rounded-2xl shadow-xl p-10 border border-gray-200">
+        <h1 className="text-3xl font-extrabold mb-6 text-gray-900 text-center">ATS Resume Checker</h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <Label htmlFor="job-description">Job Description</Label>
+            <Textarea
+              id="job-description"
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              rows={6}
+              className="w-full mt-2"
+            />
           </div>
-        </div>
-      )}
+          <div>
+            <Label htmlFor="resume-upload">Upload Resume</Label>
+            <Input
+              id="resume-upload"
+              type="file"
+              accept=".pdf,.doc,.docx,.txt"
+              onChange={handleFileChange}
+              className="w-full mt-2"
+            />
+          </div>
+          <Button type="submit" disabled={loading} className="w-full text-lg font-semibold bg-gray-900 hover:bg-gray-800">
+            {loading ? "Checking..." : "Check ATS Score"}
+          </Button>
+        </form>
+        {analysis && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 80, damping: 15 }}
+            className="mt-8 p-6 bg-gray-50 rounded-xl shadow-inner border border-gray-200"
+          >
+            <h2 className="font-semibold mb-2 text-gray-800">Analysis Result</h2>
+            <pre className="whitespace-pre-wrap text-base text-gray-700">{analysis}</pre>
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 }

@@ -17,7 +17,10 @@ export async function POST(request) {
     const resumeFile = data.get("resume");
 
     if (!jobDescription || !resumeFile) {
-      console.error("ATS API: Missing job description or resume file", { jobDescription, resumeFile });
+      console.error("ATS API: Missing job description or resume file", {
+        jobDescription,
+        resumeFile,
+      });
       return NextResponse.json(
         { error: "Missing job description or resume file" },
         { status: 400 }
@@ -27,10 +30,19 @@ export async function POST(request) {
     const tempDir = os.tmpdir();
     const tempFilePath = path.join(tempDir, "uploaded_resume.pdf");
     try {
-      fs.writeFileSync(tempFilePath, Buffer.from(await resumeFile.arrayBuffer()));
+      fs.writeFileSync(
+        tempFilePath,
+        Buffer.from(await resumeFile.arrayBuffer())
+      );
     } catch (err) {
       console.error("ATS API: Error writing temp PDF file", err);
-      return NextResponse.json({ error: "Failed to write temp PDF file", details: err?.message || String(err) }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: "Failed to write temp PDF file",
+          details: err?.message || String(err),
+        },
+        { status: 500 }
+      );
     }
 
     let text = "";
@@ -49,7 +61,9 @@ export async function POST(request) {
             return;
           }
           text = pdfData.Pages.map((page) =>
-            page.Texts.map((textObj) => textObj.R.map((r) => r.T).join("")).join(" ")
+            page.Texts.map((textObj) =>
+              textObj.R.map((r) => r.T).join("")
+            ).join(" ")
           ).join("\n");
           resolve();
         });
@@ -57,7 +71,10 @@ export async function POST(request) {
       });
     } catch (err) {
       console.error("ATS API: Error parsing PDF", err);
-      return NextResponse.json({ error: "Failed to parse PDF", details: err?.message || String(err) }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to parse PDF", details: err?.message || String(err) },
+        { status: 500 }
+      );
     }
 
     const prompt = `
@@ -105,17 +122,35 @@ export async function POST(request) {
             parsedAnalysis = JSON.parse(jsonMatch[0]);
           } catch (e2) {
             console.error("ATS API: Failed to parse extracted JSON", e2);
-            return NextResponse.json({ error: "Failed to parse AI response: extracted content is not valid JSON." }, { status: 500 });
+            return NextResponse.json(
+              {
+                error:
+                  "Failed to parse AI response: extracted content is not valid JSON.",
+              },
+              { status: 500 }
+            );
           }
         } else {
-          console.error("ATS API: Failed to parse AI response and no JSON object found", e);
-          return NextResponse.json({ error: "Failed to parse AI response: no JSON object found." }, { status: 500 });
+          console.error(
+            "ATS API: Failed to parse AI response and no JSON object found",
+            e
+          );
+          return NextResponse.json(
+            { error: "Failed to parse AI response: no JSON object found." },
+            { status: 500 }
+          );
         }
       }
       return NextResponse.json({ analysis: parsedAnalysis });
     } catch (error) {
       console.error("ATS API: Error generating content from Claude", error);
-      return NextResponse.json({ error: "Failed to generate ATS analysis", details: error?.message || String(error) }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: "Failed to generate ATS analysis",
+          details: error?.message || String(error),
+        },
+        { status: 500 }
+      );
     }
   } catch (error) {
     console.error("ATS API: General error analyzing resume", error);
@@ -127,3 +162,4 @@ export async function POST(request) {
       { status: 500 }
     );
   }
+}
