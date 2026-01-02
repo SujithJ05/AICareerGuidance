@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Loader2, Send, AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
+import { logger } from "@/lib/logger";
 
 export default function Chatbot({ customPrompt = "" }) {
   const [messages, setMessages] = useState([
@@ -43,7 +44,7 @@ export default function Chatbot({ customPrompt = "" }) {
         { role: "assistant", content: data.reply || "No response received" },
       ]);
     } catch (err) {
-      console.error("Chatbot error:", err);
+      logger.error("Chatbot error:", err);
       setError("Failed to get response. Please try again.");
       setMessages([
         ...newMessages,

@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 // GET - Get a specific certificate by ID
 export async function GET(request, { params }) {

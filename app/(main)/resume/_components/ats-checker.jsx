@@ -28,7 +28,7 @@ export const AtsChecker = ({ content }) => {
                 setAtsResult(parsedResult);
                 toast.success('ATS check completed!');
             } catch (e) {
-                console.error("Failed to parse AI response:", result.data);
+                logger.error("Failed to parse AI response:", result.data);
                 toast.error("The AI returned a response in an unexpected format.");
             }
         } else {

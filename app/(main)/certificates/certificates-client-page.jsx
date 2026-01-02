@@ -116,7 +116,7 @@ export default function CertificatesPage() {
           setStreak(streakData);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        logger.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }

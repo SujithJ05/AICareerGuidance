@@ -40,7 +40,7 @@ export default function AtsCheckerPage() {
       const data = await response.json();
       setResult(data);
     } catch (error) {
-      console.error("Error:", error);
+      logger.error("Error:", error);
       alert("An error occurred while analyzing the resume.");
     } finally {
       setLoading(false);

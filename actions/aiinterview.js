@@ -12,12 +12,6 @@ export const generateQuestionsList = async (
   jobDescription,
   duration
 ) => {
-  console.log("API Key present:", !!process.env.ANTHROPIC_API_KEY);
-  console.log(
-    "API Key starts with:",
-    process.env.ANTHROPIC_API_KEY?.substring(0, 10)
-  );
-  // 🔹 Your prompt EXACTLY as written (no changes), only values inserted
   const QUESTION_PROMPT = `
 You are an expert technical interviewer.
 Based on the following inputs, generate a well-structured list of high-quality interview questions:

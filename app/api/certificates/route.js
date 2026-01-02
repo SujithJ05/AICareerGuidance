@@ -1,19 +1,29 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
+import { apiLimiter } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
+import { getCachedUser } from "@/lib/db-utils";
 
 // GET - List all certificates for the authenticated user
-export async function GET() {
+export async function GET(request) {
   try {
+    // Rate limiting
+    const rateLimitResult = await apiLimiter(request);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429, headers: rateLimitResult.headers }
+      );
+    }
+
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get the user's database ID
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
-    });
+    // Get the user's database ID with caching
+    const user = await getCachedUser(userId, { id: true });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -25,7 +35,7 @@ export async function GET() {
 
     return NextResponse.json(certificates);
   } catch (error) {
-    console.error("Error fetching certificates:", error);
+    logger.error("Error fetching certificates:", error);
     return NextResponse.json(
       { error: "Failed to fetch certificates" },
       { status: 500 }
@@ -50,9 +60,7 @@ export async function POST(request) {
     }
 
     // Get the user
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
-    });
+    const user = await getCachedUser(userId, { id: true, name: true });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }

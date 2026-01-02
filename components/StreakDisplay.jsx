@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { logger } from "@/lib/logger";
 
 export default function StreakDisplay() {
   const [streak, setStreak] = useState(null);
@@ -21,7 +22,7 @@ export default function StreakDisplay() {
           setStreak(data);
         }
       } catch (error) {
-        console.error("Error fetching streak:", error);
+        logger.error("Error fetching streak:", error);
       } finally {
         setLoading(false);
       }

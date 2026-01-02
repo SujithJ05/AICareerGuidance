@@ -3,6 +3,9 @@ import { promises as fs } from "fs";
 import { Poppler } from "node-poppler";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import path from "path";
+import { apiLimiter } from "@/lib/rate-limit";
+import { auth } from "@clerk/nextjs/server";
+import { logger } from "@/lib/logger";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
@@ -21,6 +24,26 @@ export async function POST(req) {
   let imagePath = null;
 
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimitResult = apiLimiter.check(10, userId);
+    if (rateLimitResult.isRateLimited) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": rateLimitResult.limit.toString(),
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": new Date(rateLimitResult.reset).toISOString(),
+          },
+        }
+      );
+    }
+
     const formData = await req.formData();
     const jobDescription = formData.get("jobDescription");
     const resumeFile = formData.get("resume");
@@ -32,15 +55,22 @@ export async function POST(req) {
       );
     }
 
+    if (resumeFile.size > 5 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "File size exceeds 5MB limit" },
+        { status: 400 }
+      );
+    }
+
     await fs.mkdir(tempDir, { recursive: true });
-    tempFilePath = path.join(tempDir, resumeFile.name);
+    tempFilePath = path.join(tempDir, `${Date.now()}-${resumeFile.name}`);
     await fs.writeFile(
       tempFilePath,
       Buffer.from(await resumeFile.arrayBuffer())
     );
 
     const poppler = new Poppler();
-    const outputPrefix = path.join(tempDir, "resume");
+    const outputPrefix = path.join(tempDir, `resume-${Date.now()}`);
     await poppler.pdfToCairo(tempFilePath, outputPrefix, {
       png: true,
       singleFile: true,
@@ -67,26 +97,23 @@ export async function POST(req) {
     const response = await result.response;
     const text = response.text();
 
-    // Cleanup temporary files
     if (tempFilePath) await fs.unlink(tempFilePath).catch(() => {});
     if (imagePath) await fs.unlink(imagePath).catch(() => {});
 
     return NextResponse.json({ result: text });
   } catch (error) {
-    console.error("Error in ats-checker API route:", error);
+    logger.error("Error in ats-checker API route:", error);
 
-    // Cleanup temporary files on error
     try {
       if (tempFilePath) await fs.unlink(tempFilePath).catch(() => {});
       if (imagePath) await fs.unlink(imagePath).catch(() => {});
 
-      // Try to clean all temp files
       const files = await fs.readdir(tempDir).catch(() => []);
       for (const file of files) {
         await fs.unlink(path.join(tempDir, file)).catch(() => {});
       }
     } catch (cleanupError) {
-      console.error("Cleanup error:", cleanupError);
+      logger.error("Cleanup error:", cleanupError);
     }
 
     return NextResponse.json(

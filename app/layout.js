@@ -25,7 +25,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-gray-100 via-white to-gray-200 min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-linear-to-br from-gray-100 via-white to-gray-200 min-h-screen`}
       >
         {/* ✅ ClerkProvider must wrap inside <body>, not around <html> */}
         <ClerkProvider
@@ -47,7 +47,7 @@ export default function RootLayout({ children }) {
               {/* <ThemeToggle suppressHydrationWarning /> */}
             </div>
 
-            <footer className="fixed bottom-0 w-full bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 py-3 shadow-lg border-t border-gray-800">
+            <footer className="fixed bottom-0 w-full bg-linear-to-r from-gray-900 via-gray-800 to-gray-700 py-3 shadow-lg border-t border-gray-800">
               <div className="container mx-auto px-6 text-center text-gray-200 font-semibold tracking-wide">
                 <p>
                   All rights reserved &copy; {new Date().getFullYear()}{" "}

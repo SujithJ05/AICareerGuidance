@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { Download, Save, Loader2, ArrowLeft, FileCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -190,7 +191,7 @@ ${parts.join(" | ")}
         content: resumeContent,
       });
     } catch (error) {
-      console.error("Save error:", error);
+      logger.error("Save error:", error);
     }
   };
 
@@ -206,7 +207,7 @@ ${parts.join(" | ")}
         content: resumeContent,
       });
     } catch (error) {
-      console.error("Save error:", error);
+      logger.error("Save error:", error);
     }
   };
 
@@ -234,7 +235,7 @@ ${parts.join(" | ")}
         toast.error("Failed to save resume");
       }
     } catch (error) {
-      console.error("Save error:", error);
+      logger.error("Save error:", error);
       toast.error("Failed to save resume");
     } finally {
       setIsSavingForAts(false);
@@ -392,7 +393,7 @@ ${parts.join(" | ")}
       link.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("PDF generation error:", err);
+      logger.error("PDF generation error:", err);
     } finally {
       setIsGenerating(false);
     }

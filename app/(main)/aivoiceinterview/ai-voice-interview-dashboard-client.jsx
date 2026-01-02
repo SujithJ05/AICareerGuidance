@@ -29,7 +29,7 @@ export default function AiVoiceInterviewDashboard({ initialInterviews }) {
       setFeedbackData(JSON.parse(cleaned));
       setOpen(true);
     } catch (err) {
-      console.error("Invalid JSON feedback:", err, feedback);
+      logger.error("Invalid JSON feedback:", err, feedback);
     }
   };
 

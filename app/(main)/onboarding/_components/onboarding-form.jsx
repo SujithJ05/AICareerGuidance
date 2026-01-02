@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { logger } from "@/lib/logger";
 import React, { useEffect, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -248,13 +249,13 @@ const OnboardingForm = ({ industries }) => {
   }, [selectedIndustryIds, industries]);
 
   const onSubmit = async (values) => {
-    console.log(values);
+    logger.debug(values);
     try {
       await updateUserFn({
         ...values,
       });
     } catch (error) {
-      console.log("onboarding error", error);
+      logger.debug("onboarding error", error);
     }
   };
 

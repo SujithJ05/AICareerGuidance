@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { logger } from "@/lib/logger";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -49,7 +50,7 @@ const ResumeDashboardPage = () => {
         const fetchedResumes = await getResumes();
         setResumes(fetchedResumes);
       } catch (error) {
-        console.error("Failed to fetch resumes:", error);
+        logger.error("Failed to fetch resumes:", error);
       } finally {
         setLoading(false);
       }

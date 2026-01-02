@@ -15,7 +15,7 @@
 //       [field]: value,
 //     }));
 //   };
-//   console.log(formData);
+//   logger.debug(formData);
 //   return (
 //     <div className="container mx-auto space-y-4 p-6 mt-20">
 

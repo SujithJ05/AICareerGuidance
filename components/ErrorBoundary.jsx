@@ -4,6 +4,7 @@ import React from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
+import { logger } from "@/lib/logger";
 
 export class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -16,7 +17,7 @@ export class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Error caught by boundary:", error, errorInfo);
+    logger.error("Error caught by boundary:", error, errorInfo);
   }
 
   render() {

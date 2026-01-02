@@ -1,10 +1,22 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
+import { apiLimiter } from "@/lib/rate-limit";
+import { getCachedUser, invalidateUserCache } from "@/lib/db-utils";
 
 // GET - Get user's streak info
-export async function GET() {
+export async function GET(request) {
   try {
+    // Rate limiting
+    const rateLimitResult = await apiLimiter(request);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429, headers: rateLimitResult.headers }
+      );
+    }
+
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -52,7 +64,7 @@ export async function GET() {
       lastActiveDate: user.lastActiveDate,
     });
   } catch (error) {
-    console.error("Error fetching streak:", error);
+    logger.error("Error fetching streak:", error);
     return NextResponse.json(
       { error: "Failed to fetch streak" },
       { status: 500 }
@@ -138,7 +150,7 @@ export async function POST() {
       message: "Streak updated",
     });
   } catch (error) {
-    console.error("Error updating streak:", error);
+    logger.error("Error updating streak:", error);
     return NextResponse.json(
       { error: "Failed to update streak" },
       { status: 500 }

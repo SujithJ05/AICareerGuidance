@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import {
   Download,
@@ -119,16 +120,16 @@ const ResumeBuilder = ({ initialContent }) => {
 
   const onSubmit = async (data) => {
     try {
-      console.log("button clicked");
+      logger.debug("button clicked");
       const formattedContent = previewContent
         .replace(/\n/g, "\n") // Normalize newlines
         .replace(/\n\s*\n/g, "\n\n") // Normalize multiple newlines to double newlines
         .trim();
 
-      console.log(previewContent, formattedContent);
+      logger.debug(previewContent, formattedContent);
       await saveResumeFn(previewContent);
     } catch (error) {
-      console.error("Save error:", error);
+      logger.error("Save error:", error);
     }
   };
 
@@ -273,7 +274,7 @@ const ResumeBuilder = ({ initialContent }) => {
       link.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("PDF generation error:", err);
+      logger.error("PDF generation error:", err);
     } finally {
       setIsGenerating(false);
     }
@@ -291,7 +292,7 @@ const ResumeBuilder = ({ initialContent }) => {
   //     const element = document.getElementById("resume-pdf");
 
   //     if (!element) {
-  //       console.error(" Resume element not found!");
+  //       logger.error(" Resume element not found!");
   //       setIsGenerating(false);
   //       return;
   //     }
@@ -306,7 +307,7 @@ const ResumeBuilder = ({ initialContent }) => {
 
   //     await html2pdf().set(opt).from(element).save();
   //   } catch (error) {
-  //     console.error("PDF generation error:", error);
+  //     logger.error("PDF generation error:", error);
   //   } finally {
   //     setIsGenerating(false);
   //   }

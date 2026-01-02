@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { logger } from "@/lib/logger";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -17,7 +18,7 @@ export default function CourseDashboard() {
       const data = await res.json();
       setCourses(data);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     } finally {
       setLoading(false);
     }
@@ -33,7 +34,7 @@ export default function CourseDashboard() {
       if (!res.ok) throw new Error("Failed to delete course");
       setCourses((prev) => prev.filter((c) => c.id !== id));
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   };
 

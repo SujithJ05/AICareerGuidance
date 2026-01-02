@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { YoutubeTranscript } from "youtube-transcript"; // Uncomment if using youtube-transcript
 import Anthropic from "@anthropic-ai/sdk"; // Or your LLM provider
+import { logger } from "@/lib/logger";
 
 const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 const MODEL_NAME = "claude-sonnet-4-5-20250929";
@@ -116,10 +117,10 @@ Now generate the full course:`;
           .replace(/COURSE RATING:\s*\d+\.?\d*/gi, "")
           .replace(/Rating:\s*\d+\.?\d*\s*\/\s*5/gi, "")
           .trim();
-        console.log("AI evaluated rating from course generation:", rating);
+        logger.debug("AI evaluated rating from course generation:", rating);
       } else {
         roadmap = fullResponse;
-        console.log("Rating not found in response, evaluating separately...");
+        logger.debug("Rating not found in response, evaluating separately...");
       }
 
       // Always evaluate separately to ensure accurate rating
@@ -130,7 +131,7 @@ Now generate the full course:`;
         const chapterCount = (roadmap.match(/^## /gm) || []).length;
         const codeBlockCount = (roadmap.match(/```/g) || []).length / 2;
         const wordCount = roadmap.split(/\s+/).length;
-        
+
         const ratingPrompt = `You are a course quality evaluator. Analyze this generated course and provide a rating.
 
 COURSE METADATA:
@@ -178,17 +179,26 @@ Your rating:`;
         const numberMatch = ratingText.match(/(\d+\.?\d*)/);
         if (numberMatch) {
           const evaluatedRating = parseFloat(numberMatch[1]);
-          if (!isNaN(evaluatedRating) && evaluatedRating >= 1.0 && evaluatedRating <= 5.0) {
+          if (
+            !isNaN(evaluatedRating) &&
+            evaluatedRating >= 1.0 &&
+            evaluatedRating <= 5.0
+          ) {
             rating = Math.round(evaluatedRating * 10) / 10;
-            console.log("Evaluated rating:", rating, "from response:", ratingText);
+            logger.debug(
+              "Evaluated rating:",
+              rating,
+              "from response:",
+              ratingText
+            );
           }
         }
       } catch (ratingErr) {
-        console.error("Rating evaluation error:", ratingErr);
+        logger.error("Rating evaluation error:", ratingErr);
         // Keep the rating from the main response if we had one, otherwise null
       }
     } catch (err) {
-      console.error("Course generation error:", err);
+      logger.error("Course generation error:", err);
       roadmap = "Course could not be generated. Please try again.";
       rating = null;
     }
@@ -206,7 +216,7 @@ Your rating:`;
       },
     });
   } catch (error) {
-    console.error("API Error:", error);
+    logger.error("API Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

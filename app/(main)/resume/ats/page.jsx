@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { logger } from "@/lib/logger";
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -65,7 +66,7 @@ const AtsCheckerPage = () => {
             );
           }
         } catch (error) {
-          console.error("Failed to load resume from URL:", error);
+          logger.error("Failed to load resume from URL:", error);
         } finally {
           setLoadingFromUrl(false);
         }
@@ -189,7 +190,7 @@ const AtsCheckerPage = () => {
       const result = await checkAts(resumeContent, jobDescription);
       let parsed = null;
       // Log the raw result for debugging
-      console.log("Raw ATS result:", result);
+      logger.debug("Raw ATS result:", result);
       if (result && typeof result === "object" && result.success) {
         // New server action format
         if (result.data) {
@@ -200,7 +201,7 @@ const AtsCheckerPage = () => {
                 : result.data;
           } catch (err) {
             // If parsing fails, show raw data
-            console.error(
+            logger.error(
               "Failed to parse ATS data as JSON:",
               result.data,
               err
@@ -219,7 +220,7 @@ const AtsCheckerPage = () => {
         try {
           parsed = JSON.parse(result);
         } catch (err) {
-          console.error("Failed to parse ATS result as JSON:", result, err);
+          logger.error("Failed to parse ATS result as JSON:", result, err);
           toast.error(
             "ATS check completed, but result could not be parsed. Showing raw analysis."
           );
@@ -234,7 +235,7 @@ const AtsCheckerPage = () => {
         toast.error("ATS check failed: No result returned.");
       }
     } catch (error) {
-      console.error("Failed to check ATS score:", error);
+      logger.error("Failed to check ATS score:", error);
       toast.error("Failed to check ATS score.");
     } finally {
       setIsChecking(false);

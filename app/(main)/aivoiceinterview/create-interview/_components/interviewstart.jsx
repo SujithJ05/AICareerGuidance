@@ -52,7 +52,7 @@ const InterviewStart = ({ formData, questions }) => {
 
     const result = await saveVoiceInterview(formData, questions);
 
-    console.log("Save Result:", result);
+    logger.debug("Save Result:", result);
 
     if (result?.interviewId) {
       router.push(`/aivoiceinterview/${result.interviewId}`);

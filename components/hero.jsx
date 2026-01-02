@@ -16,7 +16,7 @@ const HeroSection = () => {
           </div>
 
           <div className="space-y-6">
-            <h1 className="text-4xl font-bold md:text-6xl lg:text-7xl bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400">
+            <h1 className="text-4xl font-bold md:text-6xl lg:text-7xl bg-clip-text text-transparent bg-linear-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400">
               Your AI Career Coach for
               <br />
               Professional Success

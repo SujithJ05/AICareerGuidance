@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { logger } from "@/lib/logger";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Book, Clock, Award, Trash2, Star, Trophy } from "lucide-react";
@@ -49,7 +50,7 @@ export default function CourseGeneratorPage() {
       const data = await res.json();
       setCourses(data);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     } finally {
       setLoading(false);
     }
@@ -114,7 +115,7 @@ export default function CourseGeneratorPage() {
       if (!res.ok) throw new Error("Failed to delete course");
       setCourses((prev) => prev.filter((c) => c.id !== id));
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     } finally {
       setDeleteConfirm({ open: false, courseId: null, courseTitle: "" });
     }

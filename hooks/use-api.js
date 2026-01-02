@@ -122,7 +122,7 @@ export function useForm(initialValues, onSubmit, validation = {}) {
     try {
       await onSubmit(values);
     } catch (error) {
-      console.error("Form submission error:", error);
+      logger.error("Form submission error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -184,7 +184,7 @@ export function useLocalStorage(key, initialValue) {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return initialValue;
     }
   });
@@ -199,7 +199,7 @@ export function useLocalStorage(key, initialValue) {
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     }
   };
 

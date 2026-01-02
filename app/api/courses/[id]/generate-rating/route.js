@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
+import { logger } from "@/lib/logger";
 
 const anthropic = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY,
@@ -101,13 +102,13 @@ RESPOND WITH ONLY A SINGLE NUMBER (e.g., 3.7 or 4.2). Nothing else.`;
       if (!isNaN(rating) && rating !== null) {
         rating = Math.min(5.0, Math.max(1.0, rating));
         rating = Math.round(rating * 10) / 10;
-        console.log("AI evaluated rating:", rating);
+        logger.debug("AI evaluated rating:", rating);
       } else {
         throw new Error("Invalid AI response");
       }
     } catch (aiError) {
       // Fallback to metrics-based rating if AI fails
-      console.log(
+      logger.debug(
         "AI rating failed, using metrics-based fallback:",
         aiError.message
       );
@@ -119,7 +120,7 @@ RESPOND WITH ONLY A SINGLE NUMBER (e.g., 3.7 or 4.2). Nothing else.`;
           (wordCount >= 1000 ? 0.5 : wordCount / 2000)
       );
       rating = Math.round(rating * 10) / 10;
-      console.log("Metrics-based fallback rating:", rating);
+      logger.debug("Metrics-based fallback rating:", rating);
     }
 
     // Update the course with the new rating
@@ -130,7 +131,7 @@ RESPOND WITH ONLY A SINGLE NUMBER (e.g., 3.7 or 4.2). Nothing else.`;
 
     return NextResponse.json({ rating, success: true });
   } catch (error) {
-    console.error("Rating generation error:", error);
+    logger.error("Rating generation error:", error);
     return NextResponse.json(
       { error: "Failed to generate rating" },
       { status: 500 }
