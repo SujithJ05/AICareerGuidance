@@ -1,11 +1,11 @@
-import React from 'react'
+import React from "react";
 
-const Mainlayout = ({children}) => {
+const Mainlayout = ({ children }) => {
   return (
-    <div>
-      {children}
+    <div className="min-h-screen bg-background">
+      <main className="pt-16">{children}</main>
     </div>
-  )
-}
+  );
+};
 
-export default Mainlayout
+export default Mainlayout;

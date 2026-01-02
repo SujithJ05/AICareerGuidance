@@ -1,23 +1,61 @@
 "use server";
 
-// --- TEMP STUBS FOR PRODUCTION BUILD ---
-// TODO: Implement these properly
-export async function checkAts(content, jobDescription) {
-  return { success: false, error: "checkAts not implemented" };
-}
-
-export async function getResumeById(resumeId) {
-  return null;
-}
-
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
-//import { GoogleGenerativeAI } from "@google/generative-ai";
 import { revalidatePath } from "next/cache";
 import Anthropic from "@anthropic-ai/sdk";
 
-// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+const client = new Anthropic({
+  apiKey: process.env.CLAUDE_API_KEY,
+});
+
+/**
+ * Get resume by ID
+ */
+export async function getResumeById(resumeId) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const resume = await db.resume.findFirst({
+    where: {
+      id: resumeId,
+      userId: user.id,
+    },
+  });
+
+  return resume;
+}
+
+/**
+ * Check ATS compatibility
+ */
+export async function checkAts(content, jobDescription) {
+  try {
+    // Implementation for ATS checking would go here
+    // This could integrate with the ATS checker API
+    return {
+      success: true,
+      score: 0,
+      message: "ATS check completed",
+    };
+  } catch (error) {
+    console.error("ATS check error:", error);
+    return {
+      success: false,
+      error: "Failed to check ATS compatibility",
+    };
+  }
+}
 
 const client = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY,

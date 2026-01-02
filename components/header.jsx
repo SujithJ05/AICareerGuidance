@@ -31,15 +31,15 @@ import StreakDisplay from "./StreakDisplay";
 const Header = async () => {
   await checkUser();
   return (
-    <header className="fixed top-0 w-full bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 shadow-lg border-b border-gray-800 z-50 supports-backdrop-filter:bg-background/60">
+    <header className="fixed top-0 w-full bg-linear-to-r from-gray-900 via-gray-800 to-gray-700 shadow-lg border-b border-gray-800 z-50 backdrop-blur-sm bg-opacity-95">
       <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/">
+        <Link href="/" className="transition-transform hover:scale-105">
           <span className="h-12 py-1 w-auto object-contain text-2xl font-extrabold text-white tracking-tight drop-shadow-lg">
             CareerGuideAI
           </span>
         </Link>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3 md:space-x-4">
           <SignedIn>
             {/* <Link href='/dashboard'>
               <Button>

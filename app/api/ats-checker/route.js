@@ -16,6 +16,10 @@ async function fileToGenerativePart(buffer, mimeType) {
 }
 
 export async function POST(req) {
+  const tempDir = path.join(process.cwd(), "tmp");
+  let tempFilePath = null;
+  let imagePath = null;
+
   try {
     const formData = await req.formData();
     const jobDescription = formData.get("jobDescription");
@@ -28,10 +32,12 @@ export async function POST(req) {
       );
     }
 
-    const tempDir = path.join(process.cwd(), "tmp");
     await fs.mkdir(tempDir, { recursive: true });
-    const tempFilePath = path.join(tempDir, resumeFile.name);
-    await fs.writeFile(tempFilePath, Buffer.from(await resumeFile.arrayBuffer()));
+    tempFilePath = path.join(tempDir, resumeFile.name);
+    await fs.writeFile(
+      tempFilePath,
+      Buffer.from(await resumeFile.arrayBuffer())
+    );
 
     const poppler = new Poppler();
     const outputPrefix = path.join(tempDir, "resume");
@@ -40,7 +46,7 @@ export async function POST(req) {
       singleFile: true,
     });
 
-    const imagePath = `${outputPrefix}.png`;
+    imagePath = `${outputPrefix}.png`;
     const imageBuffer = await fs.readFile(imagePath);
 
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -49,6 +55,9 @@ export async function POST(req) {
       You are a skilled ATS (Applicant Tracking System) scanner with a deep understanding of data science and ATS functionality.
       Your task is to evaluate the resume against the provided job description. Give me the percentage of match if the resume matches
       with the job description. First, the output should come as a percentage, then keywords missing, and last, final thoughts.
+      
+      Job Description:
+      ${jobDescription}
     `;
 
     const imagePart = await fileToGenerativePart(imageBuffer, "image/png");
@@ -58,19 +67,30 @@ export async function POST(req) {
     const response = await result.response;
     const text = response.text();
 
-    await fs.unlink(tempFilePath);
-    await fs.unlink(imagePath);
+    // Cleanup temporary files
+    if (tempFilePath) await fs.unlink(tempFilePath).catch(() => {});
+    if (imagePath) await fs.unlink(imagePath).catch(() => {});
 
     return NextResponse.json({ result: text });
   } catch (error) {
     console.error("Error in ats-checker API route:", error);
-    const tempDir = path.join(process.cwd(), "tmp");
-    const files = await fs.readdir(tempDir);
-    for (const file of files) {
-      await fs.unlink(path.join(tempDir, file));
+
+    // Cleanup temporary files on error
+    try {
+      if (tempFilePath) await fs.unlink(tempFilePath).catch(() => {});
+      if (imagePath) await fs.unlink(imagePath).catch(() => {});
+
+      // Try to clean all temp files
+      const files = await fs.readdir(tempDir).catch(() => []);
+      for (const file of files) {
+        await fs.unlink(path.join(tempDir, file)).catch(() => {});
+      }
+    } catch (cleanupError) {
+      console.error("Cleanup error:", cleanupError);
     }
+
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", message: error.message },
       { status: 500 }
     );
   }
